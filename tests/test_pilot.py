@@ -24,6 +24,15 @@ QUOTA_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
   </cmmMsgHeader>
 </OpenAPI_ServiceResponse>'''
 
+RATE_LIMIT_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
+<OpenAPI_ServiceResponse>
+  <cmmMsgHeader>
+    <errMsg>SERVICE ERROR</errMsg>
+    <returnAuthMsg>LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND_EXCEEDS_ERROR</returnAuthMsg>
+    <returnReasonCode>23</returnReasonCode>
+  </cmmMsgHeader>
+</OpenAPI_ServiceResponse>'''
+
 
 def test_parse_and_validate(tmp_path: Path):
     p = tmp_path / "x.xml.gz"
@@ -202,6 +211,26 @@ def test_quota_response_is_classified_without_retry_or_split(tmp_path: Path):
     assert outcome.status == "quota_exceeded"
     assert outcome.api_result_code == "22"
     assert session.calls == 1
+    assert pilot.should_split(outcome) is False
+
+
+def test_per_second_rate_limit_is_classified(tmp_path: Path):
+    response = FakeResponse([RATE_LIMIT_XML])
+    session = FakeSession([response])
+    outcome = pilot.download_one(
+        session=session,
+        service_key="SECRET+KEY==",
+        country="US",
+        window=pilot.Window("202501", "202512"),
+        data_dir=tmp_path,
+        connect_timeout=1,
+        read_timeout=1,
+        retries=0,
+        force=True,
+    )
+    assert outcome.success is False
+    assert outcome.status == "rate_limited"
+    assert outcome.api_result_code == "23"
     assert pilot.should_split(outcome) is False
 
 

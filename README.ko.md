@@ -25,7 +25,7 @@
 
 ### 로드맵 진행 상황
 
-현재 단계는 **7/12 — production collector 설계/구현**입니다. 1~6단계는 완료했습니다. `hsSgn`을 생략한 **US × 2025 전체 연도 요청**은 clean PASS했고, 대표 **5개국 × 4개 연도** matrix도 20/20 country-year가 연간 1회 요청으로 성공했습니다. retry와 adaptive split은 모두 0회였습니다.
+현재 단계는 **8/12 — normalization 및 Parquet 출력 구현**입니다. 1~7단계는 완료했습니다. production collector는 공식 KCS 269개 코드를 기준으로 scheduling하고, 최신 안정월 계산, 성공 checkpoint 재사용, run-level manifest, 일일 quota 즉시 중단, 초당 rate-limit 재시도, historical backfill 및 13개월 revision refresh를 지원합니다.
 
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
 
@@ -36,6 +36,30 @@
 - `country_code`, `country_name_ko`: 관세청 `관세청조회코드_v1.3.xlsx`
 - 영문명/M49/alpha3: UN Statistics Division M49의 alpha-2 정확 일치만 보강
 - 매칭되지 않는 KCS 코드는 영문명을 추정하지 않고 그대로 유지
+
+## Production collector
+
+대규모 수집 전 전체 계획은 dry-run으로 확인합니다.
+
+```powershell
+python .\collector.py --dry-run backfill
+```
+
+2026-09-08 기준 기본 계획은 `201201–202607`, 공식 국가코드 269개, calendar-year window 15개, **4,035 root requests**입니다. 안정월은 관세청이 전월 자료를 매월 15일경 현행화한다는 특성을 고려해 15일 이전에는 전전월, 16일 이후에는 전월을 사용합니다.
+
+full backfill 명령은 준비됐지만 normalization이 검증되는 9단계 전에는 실행하지 않습니다.
+
+```powershell
+.\run_backfill.ps1
+```
+
+월간 revision refresh는 최신 안정월과 직전 12개월, 총 13개월을 강제 재수집합니다.
+
+```powershell
+.\run_refresh.ps1
+```
+
+smoke test에는 `--countries`, `--max-roots`, `--dry-run`을 사용할 수 있습니다. production run manifest는 `data/audits/runs/`에 기록되며 서비스키는 포함하지 않습니다.
 
 ## 공식 API
 

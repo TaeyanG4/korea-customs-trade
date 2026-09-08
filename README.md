@@ -25,7 +25,7 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **7/12 — production collector**. Stages 1–6 are complete. The full **US × 2025** annual request passed cleanly, and the representative **5 countries × 4 years** matrix completed 20/20 annual requests with zero retries and zero adaptive splits.
+Current stage: **8/12 — normalization and Parquet output**. Stages 1–7 are complete. The production collector now schedules all 269 official KCS codes, computes the latest stable month conservatively, reuses successful checkpoints, records run-level manifests, stops on daily quota exhaustion, retries per-second rate limits, and supports both historical backfill and 13-month revision refreshes.
 
 The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
 
@@ -36,6 +36,30 @@ Country-code authority policy:
 - `country_code` and `country_name_ko`: Korea Customs Service `관세청조회코드_v1.3.xlsx`
 - English/M49/alpha3 enrichment: exact alpha-2 matches from UN Statistics Division M49 only
 - unmatched KCS codes are retained with blank English/UN fields; they are never dropped or guessed
+
+## Production collector
+
+Dry-run the full plan before any large collection:
+
+```powershell
+python .\collector.py --dry-run backfill
+```
+
+On 2026-09-08 this resolves to `201201–202607`, 269 country codes, 15 calendar-year windows and **4,035 root requests**. The current stable-month rule uses the prior month only after the 15th; before then it uses two months back.
+
+The full backfill command is available but is intentionally reserved for stage 9, after normalization is proven:
+
+```powershell
+.\run_backfill.ps1
+```
+
+Monthly revision refresh mode refetches the latest stable month plus the previous 12 months:
+
+```powershell
+.\run_refresh.ps1
+```
+
+For smoke tests, use `--countries`, `--max-roots`, and `--dry-run`. A production run manifest is written under `data/audits/runs/` and never contains the service key.
 
 ## Official API
 

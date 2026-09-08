@@ -4,7 +4,7 @@ Last updated: 2026-09-08
 
 ## Roadmap progress
 
-Current stage: **7/12 — design and implement the production collector**
+Current stage: **8/12 — normalization and Parquet output**
 
 1. Project status / README refresh for the active API key
 2. US x 2025 full-year pilot with `hsSgn` omitted
@@ -52,6 +52,10 @@ Current stage: **7/12 — design and implement the production collector**
 - KCS country code / Korean name is authoritative; UN M49 enriches exact current alpha-2 matches only.
 - Country reference contains 269 unique KCS codes; 248 exact UN M49 matches and 21 unmatched KCS codes retained without inference.
 - All 269 KCS country codes were accepted by the live API for 2025-01 with `resultCode=00`.
+- Production collector implemented with official 269-code scheduling, stable-month logic, annual windows, run manifests, checkpoint accounting, quota stop, per-second rate-limit retry, dry-run/subset smoke-test controls, and refresh mode.
+- Default backfill plan on 2026-09-08 resolves to 2012-01 through 2026-07: 269 countries × 15 calendar-year windows = 4,035 roots.
+- Refresh mode refetches the latest stable month plus the preceding 12 months (13 inclusive months) and currently resolves to 2025-07 through 2026-07.
+- Production smoke tests passed both checkpoint reuse (US 2025) and a new live annual request (AD 2025, 101 rows).
 
 ## Pending live work
 
@@ -86,4 +90,6 @@ This full-code one-month census materially improves the scale estimate: holding 
 
 The production root-request count is now based on the official code list: **269 country codes × 15 calendar years (2012–2026) = 4,035 root requests** before any adaptive splits. The representative matrix observed a 0% split rate.
 
-Next action: turn the proven pilot logic into a production collector driven by the official 269-code reference, with release-safe checkpoints, resumability, quota handling, and explicit stable-month boundaries.
+Stage 7 is complete. The collector is intentionally not running the 4,035-root full backfill yet; stage 8 must first define a deterministic normalization path so raw requests, including future overlapping refresh windows, cannot create duplicate normalized facts.
+
+Next action: implement strict HSK10 XML -> Parquet normalization, month/year partitioning, deterministic source selection for overlapping requests, anomaly quarantine, and schema/row-count validation before stage 9 full backfill.

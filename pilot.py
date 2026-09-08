@@ -475,12 +475,18 @@ def download_one(
         api_code == "22"
         or "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS" in api_msg
     )
+    per_second_rate_limited = (
+        api_code == "23"
+        or "LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND_EXCEEDS" in api_msg
+    )
     if success:
         status = "success"
     elif not parse_ok:
         status = "parse_error"
     elif daily_quota_exceeded:
         status = "quota_exceeded"
+    elif per_second_rate_limited:
+        status = "rate_limited"
     else:
         status = "api_error"
     outcome = RequestOutcome(
