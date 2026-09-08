@@ -14,7 +14,7 @@
 
 ## 현재 단계
 
-API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집, release QA, private Kaggle Dataset 업로드, private starter Notebook의 Kaggle runtime 검증까지 완료했습니다. 현재는 **public release 결정 단계**입니다. 최초 핵심 가정은 다음이었습니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집, release QA, private-first Kaggle 검증, public Dataset 공개, public starter Notebook 공개까지 완료했습니다. 현재는 마지막 **Usability 10.00** gap을 닫는 단계입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
@@ -27,9 +27,9 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 ### 로드맵 진행 상황
 
-현재 단계는 **12/12 — private Kaggle release 검증 완료, public publication은 명시적 승인 대기**입니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. Stage 11은 strict HSK10 22,351,430 rows와 non-HSK10 원천 예외 53 rows를 만들었고 canonical duplicate는 0, 최종 `release_gate_pass=true`입니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
+현재 단계는 **12/12 — public Kaggle release 공개 완료, Usability 10.00 후속 작업 진행 중**입니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. Stage 11은 strict HSK10 22,351,430 rows와 non-HSK10 원천 예외 53 rows를 만들었고 canonical duplicate는 0, 최종 `release_gate_pass=true`입니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
 
-Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10`은 현재 **Private**이며 Version 2가 `Ready`, 관측 Usability는 **7.65/10**입니다. Private starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`는 Version 3까지 Kaggle runtime에서 정상 완료됐고 Dataset mount auto-discovery, traceback 없음, 한글 glyph warning 없음까지 확인했습니다. Dataset과 Notebook은 명시적인 공개 결정 전까지 private을 유지하며, 공개 후에는 Notebook 연결/`kernel_count`와 최종 Usability를 실제로 재검증합니다.
+Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10`은 현재 **Public**이며 Version 2가 `Ready`, 관측 Usability는 **8.24/10**입니다. Public starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`는 Version 3까지 Kaggle runtime에서 정상 완료됐고 Dataset mount auto-discovery, traceback 없음, 한글 glyph warning 없음까지 확인했습니다. Kaggle Usability 세부값을 직접 확인한 결과 현재 감점은 file description과 column description 두 항목뿐이며 나머지 score component는 모두 완료 상태입니다.
 
 최종 제품 목표는 **Kaggle Usability 10.00 + Dataset medal**입니다. 원천 데이터를 과도하게 정제하지 않고, 공식성·재현성·분석 편의성·문서화·지속 업데이트·한글 무결성을 중심으로 완성도를 높입니다.
 

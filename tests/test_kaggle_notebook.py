@@ -9,7 +9,7 @@ NOTEBOOK_DIR = REPO_ROOT / "kaggle_notebooks" / "hs6_quickstart"
 def test_hs6_quickstart_metadata_and_source_are_release_safe():
     metadata = json.loads((NOTEBOOK_DIR / "kernel-metadata.json").read_text(encoding="utf-8"))
     assert metadata["id"] == "taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart"
-    assert metadata["is_private"] is True
+    assert metadata["is_private"] is False
     assert metadata["dataset_sources"] == ["taeyangg4/south-korea-customs-trade-hsk10"]
 
     notebook = json.loads(

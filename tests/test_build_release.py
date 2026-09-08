@@ -110,7 +110,7 @@ def test_release_anomaly_table_filters_and_renames(tmp_path: Path):
     assert filtered["raw_hs_code"].to_pylist() == ["761699"]
 
 
-def test_kaggle_metadata_defaults_to_private_and_valid_live_tags(tmp_path: Path):
+def test_kaggle_metadata_keeps_public_visibility_and_valid_live_tags(tmp_path: Path):
     repo = tmp_path / "repo"
     release = repo / "release"
     release.mkdir(parents=True)
@@ -119,7 +119,7 @@ def test_kaggle_metadata_defaults_to_private_and_valid_live_tags(tmp_path: Path)
 
     metadata = build_release.build_kaggle_metadata(release, repo)
 
-    assert metadata["isPrivate"] is True
+    assert metadata["isPrivate"] is False
     assert metadata["expectedUpdateFrequency"] == "monthly"
     assert metadata["keywords"] == [
         "economics",

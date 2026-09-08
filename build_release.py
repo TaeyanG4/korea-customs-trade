@@ -388,9 +388,10 @@ def build_kaggle_metadata(output: Path, repo_root: Path) -> dict[str, Any]:
         "subtitle": "Monthly trade by 269 partners and 10-digit Korean HSK products",
         "description": dataset_description(repo_root),
         "id": "taeyangg4/south-korea-customs-trade-hsk10",
-        # Keep metadata-only updates private by default. Kaggle CLI's metadata
-        # update path treats a missing isPrivate value as False.
-        "isPrivate": True,
+        # The dataset is public after the private-first validation milestone.
+        # Keep this explicit so future metadata updates do not accidentally
+        # drift visibility through Kaggle CLI defaults.
+        "isPrivate": False,
         "licenses": [{"name": "other"}],
         "resources": resources,
         # Use only tags confirmed valid by the live Kaggle API. Prefer a small

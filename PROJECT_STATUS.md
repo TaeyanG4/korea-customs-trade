@@ -4,7 +4,7 @@ Last updated: 2026-09-09
 
 ## Roadmap progress
 
-Current stage: **12/12 — private Kaggle release validated; public publication pending explicit approval**
+Current stage: **12/12 — public Kaggle release live; Usability 10.00 follow-up in progress**
 
 Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleaning; preserve official source truth and prioritize analyst usability, documentation, reproducibility, and encoding-safe release files.
 
@@ -84,13 +84,13 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - Stage 11 full rebuild completed and passed release QA: 22,351,430 strict HSK10 rows, 53 non-HSK10 source residual rows, 19 preserved negative-weight warning rows, 175 monthly partitions, 0 duplicate canonical keys, 0 partition mismatches, and `release_gate_pass=true` with 0 fatal sections.
 - Full derived outputs completed for HS8/HS6/HS4/HS2 with 175 monthly partitions each and residual-aware total reconciliation.
 - Stage 12 packaged one Parquet per analytical grain, a latest-month HS6 preview CSV, references/audits, a checksummed release manifest, Kaggle metadata, provenance, cover image, and usage documentation.
-- Kaggle CLI is authenticated as `taeyangg4`. The private Dataset now exists at `taeyangg4/south-korea-customs-trade-hsk10`; Dataset Version 2 is `Ready` and remains private.
+- Kaggle CLI is authenticated as `taeyangg4` with OAuth. Dataset Version 2 at `taeyangg4/south-korea-customs-trade-hsk10` is `Ready` and public.
 - Guarded private-upload wrappers (`run_kaggle_private_upload.sh` / `.ps1`) now refuse upload unless release QA and the release manifest both pass and the metadata ID is exactly `taeyangg4/south-korea-customs-trade-hsk10`. They deliberately omit `--public`.
 - A release-folder secret/path scan found no `serviceKey`, `KCS_SERVICE_KEY`, `.env`, or local project absolute path strings in upload-facing text/CSV/JSON files.
-- Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. The private upload completed successfully; Dataset Version 2 is `Ready`, has a cover image, monthly update frequency, and seven live-valid discovery tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, and `international relations`.
-- Current private Dataset Usability is **0.7647059 (7.65/10)**. The exact remaining scoring breakdown is not exposed by the current Kaggle SDK/API, so the project does not infer missing components from empty file/column metadata API fields.
-- The private starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart` has been pushed through Version 3 and completed successfully in Kaggle runtime. It auto-discovers the mounted Dataset under `/kaggle/input`, loads the recent HS6 slice with PyArrow predicate pushdown, and has no traceback or Korean glyph warning in the validated Version 3 run.
-- The Dataset and starter Notebook are both intentionally still private. The next release action is the explicit public transition, followed by verification of public visibility, Dataset `kernel_count`, and the resulting Usability score.
+- Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. The private-first validation completed successfully; Dataset Version 2 has a cover image, monthly update frequency, and seven live-valid discovery tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, and `international relations`.
+- The Dataset and starter Notebook were subsequently published. Notebook Version 3 is public, completed successfully in Kaggle runtime, auto-discovers the mounted Dataset under `/kaggle/input`, and has no traceback or Korean glyph warning.
+- Public Dataset Usability is currently **0.8235294 (8.24/10)**. Direct `DatasetDetailService/GetDatasetUsabilityRating` inspection isolates the entire residual gap to `fileDescriptionScore=0` and `columnDescriptionScore=0`; cover image, file format, license, overview, provenance, public Notebook, subtitle, tags, and update frequency all score `1`.
+- The release metadata itself is complete: all 16 upload files have non-empty descriptions and all 158 tabular fields represented in `dataset-metadata.json` have non-empty descriptions. Kaggle CLI 2.2.4 serializes these entries into `settings.data` correctly, but live OAuth `datasets metadata --update` and a fresh tiny probe Dataset both fail to persist them into the Data Viewer v3 metadata store. The Data Viewer write endpoint requires a logged-in web session and rejects OAuth bearer tokens; browser/computer-use automation is intentionally not used for this project.
 
 ## Live validation record
 
@@ -127,4 +127,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Stages 9, 10, and 11 are complete. Stage 12 has completed the private-first package/upload/runtime-validation path. Public Dataset + Notebook publication remains intentionally pending explicit approval, after which Usability and Notebook association will be rechecked rather than assumed.
+Stages 9, 10, and 11 are complete. Stage 12 has completed package build, private-first validation, public Dataset publication, and public starter-Notebook publication. The remaining release-quality task is to close the Data Viewer file/column description gap and verify **Usability 10.00** rather than assuming it from local metadata.

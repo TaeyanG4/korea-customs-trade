@@ -14,7 +14,7 @@ The final dataset will preserve full Korean **10-digit HSK** detail and derive `
 
 ## Current phase
 
-The API pilot, country-reference validation, production collector, normalization pipeline, full historical backfill, official annual HSK reference collection, release QA, private Kaggle Dataset upload, and private starter-Notebook runtime validation are complete. The project is now at the **public release decision**. The original central collection assumption was:
+The API pilot, country-reference validation, production collector, normalization pipeline, full historical backfill, official annual HSK reference collection, release QA, private-first Kaggle validation, public Dataset release, and public starter-Notebook release are complete. The project is now closing the final **Usability 10.00** gap. The original central collection assumption was:
 
 > When `cntyCd` and a period are supplied but `hsSgn` is omitted, does the Korea Customs item-by-country API return the full monthly HSK10 trade rows for that country?
 
@@ -27,9 +27,9 @@ That gate passed before the full crawl began; the historical backfill is now com
 
 ### Roadmap progress
 
-Current stage: **12/12 — private Kaggle release validated; public publication pending explicit approval**. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. Stage 11 produced 22,351,430 strict HSK10 rows plus 53 preserved non-HSK10 source exceptions, with 0 duplicate canonical keys and `release_gate_pass=true`. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
+Current stage: **12/12 — public Kaggle release live; Usability 10.00 follow-up in progress**. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. Stage 11 produced 22,351,430 strict HSK10 rows plus 53 preserved non-HSK10 source exceptions, with 0 duplicate canonical keys and `release_gate_pass=true`. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
 
-The Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10` is currently **Private**, Version 2 is `Ready`, and its observed Usability is **7.65/10**. The private starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart` reached Version 3 and completed successfully in Kaggle runtime with Dataset mount auto-discovery, no traceback, and no Korean glyph warning. Both remain private until an explicit public-release decision; after publication, the project will verify Notebook association/`kernel_count` and the resulting Usability score instead of assuming 10.0.
+The Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10` is **Public**, Version 2 is `Ready`, and its observed Usability is **8.24/10**. The public starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart` reached Version 3 and completed successfully in Kaggle runtime with Dataset mount auto-discovery, no traceback, and no Korean glyph warning. Direct Kaggle usability inspection shows that only file descriptions and column descriptions remain uncredited; all other scoring components are complete.
 
 The final product target is **Kaggle Usability 10.00 plus a Dataset medal**. The project avoids over-cleaning official source data and instead emphasizes reproducibility, analyst-ready grains, documentation, updateability, and encoding-safe Korean text.
 

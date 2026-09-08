@@ -28,19 +28,19 @@ The output is written to `release/kaggle/` and is intentionally ignored by Git.
 - Source exception and negative-weight warning files are included.
 - No API key, `.env`, raw XML, local absolute source paths, or bulky internal audit manifests are included.
 
-## Private release status
+## Public release status
 
-The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-first release has been completed and validated.
+The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-first release was validated before publication, and the Dataset and starter Notebook are now public.
 
 - Dataset Version 2: `Ready`
-- Visibility: **Private**
-- Current Usability: **7.65/10** (`0.7647059`)
+- Visibility: **Public**
+- Current Usability: **8.24/10** (`0.8235294`)
 - Update frequency: monthly
 - Cover image: present
 - Live-valid tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, `international relations`
 - Starter Notebook: `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`
 - Notebook Version 3: `COMPLETE` in Kaggle runtime
-- Notebook visibility: **Private**
+- Notebook visibility: **Public**
 
 The guarded upload wrapper remains the reproducible path for future private version uploads. It verifies the release QA result, release manifest, and dataset ID before invoking Kaggle and deliberately does **not** add `--public`.
 
@@ -66,19 +66,23 @@ kaggle datasets create -p release/kaggle -t
 
 Now that the Dataset exists, future data/metadata releases should use a Dataset version update rather than repeating `datasets create`.
 
-The private validation already confirmed the Dataset files, metadata, cover, provenance, monthly frequency, and starter Notebook runtime. Do not create another full Dataset version solely because Kaggle's files/metadata APIs report empty file descriptions or zero columns; the same API behavior was observed on public Usability-10 datasets.
+The private validation already confirmed the Dataset files, metadata, cover, provenance, monthly frequency, and starter Notebook runtime. Do not create another ~1.19 GB Dataset version solely because Kaggle's legacy metadata response omits file/column descriptions; the same response behavior is visible on public Usability-10 datasets.
 
 ## Usability / medal follow-up
 
-The concise HS6 starter Notebook already exists and has been validated privately:
+The concise HS6 starter Notebook is public and validated:
 
 **South Korea Trade in 5 Minutes — HS6 Quickstart**
 
-The remaining release sequence is:
+The public Notebook raised the Dataset from the private-first score, and direct Kaggle usability inspection now identifies only two remaining components:
 
-1. Make the Dataset public only after explicit approval.
-2. Make the already validated starter Notebook public and preserve its Dataset source association.
-3. Re-check Dataset public visibility, Notebook public visibility, Dataset `kernel_count`, and Usability after Kaggle propagation.
-4. If Usability remains below 10.0, investigate only the residual gap; do not repeat the ~1.189 GB upload without evidence that a new Dataset version is required.
+- `fileDescriptionScore = 0`
+- `columnDescriptionScore = 0`
 
-A public Notebook is strongly indicated by the sampled Usability-10 ecosystem, but it is not treated as a guaranteed score change. Final Usability must be verified after publication. Deeper follow-up notebooks can then cover semiconductor exports, partner concentration, and HSK10 supply-chain dependence.
+Every other Usability component is `1`. Local release metadata already contains descriptions for all 16 files and all 158 represented columns. Kaggle CLI 2.2.4 sends those descriptions correctly, but live OAuth metadata updates do not persist them into Data Viewer v3. A fresh tiny probe Dataset reproduced the same behavior, so this is not evidence that the 1.19 GB trade package needs another blind upload.
+
+The remaining sequence is therefore:
+
+1. Persist all file and column descriptions into Kaggle's Data Viewer metadata store using a supported authenticated path.
+2. Re-check `fileDescriptionScore=1`, `columnDescriptionScore=1`, and final `score=1.0`.
+3. Only after the score is verified at 10.00, treat the Usability milestone as complete and shift focus to sustained updates and Dataset-medal discovery/quality work.
