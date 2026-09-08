@@ -23,6 +23,10 @@ The first live test is **US × 2025**. The planned pilot matrix is:
 
 No full crawl should begin until this pilot passes.
 
+### Roadmap progress
+
+Current stage: **1/12 — project status and documentation refresh**. The approved/updated service key has been verified with a live HTTP 200 / `resultCode=00` probe. The next stage is the full **US × 2025** pilot with `hsSgn` omitted.
+
 ## Official API
 
 - Korea Customs Service item-by-country import/export performance (GW)

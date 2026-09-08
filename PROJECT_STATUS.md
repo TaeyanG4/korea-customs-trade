@@ -2,6 +2,23 @@
 
 Last updated: 2026-09-08
 
+## Roadmap progress
+
+Current stage: **1/12 — project status and documentation refresh**
+
+1. Project status / README refresh for the active API key
+2. US x 2025 full-year pilot with `hsSgn` omitted
+3. Inspect pilot results and validate the central HSK10 hypothesis
+4. Run the 5-country x 4-year representative pilot matrix
+5. Re-estimate total row count, storage, runtime, and request volume
+6. Acquire and validate the official country-code reference
+7. Design and implement the production collector
+8. Implement normalization and Parquet output
+9. Run the full historical backfill
+10. Build the revision-aware HSK dimension
+11. Run reconciliation and release QA
+12. Build and publish the Kaggle release package
+
 ## Implemented
 
 - Official Korea Customs item-by-country endpoint configured.
@@ -31,11 +48,6 @@ Last updated: 2026-09-08
 
 ## Pending live work
 
-The local `KCS_SERVICE_KEY` has been configured. A live probe on 2026-09-08 reached data.go.kr but returned HTTP 403 / reason code 30 (`SERVICE_KEY_IS_NOT_REGISTERED_ERROR`), so the crawl is currently blocked on service-key registration/activation rather than request-volume handling.
+The operating/traffic increase application has been approved and the service key changed as part of that approval. The project-local `.env` has been updated with the active key. A live probe on 2026-09-08 returned HTTP 200 / `resultCode=00`, confirming that the API is currently callable.
 
-1. Apply for an operating account / increased traffic allowance if available for the current usage application.
-2. When quota is available, run US x 2025 with `hsSgn` omitted.
-3. Inspect the generated pilot report and raw response.
-4. If the root hypothesis passes, run the 5-country x 4-year matrix.
-5. Re-estimate total dataset size and worst-case request count from observed split rates.
-6. Only then proceed to the production collector and normalization pipeline.
+Next action: run the full US x 2025 request with `hsSgn` omitted, then inspect the generated raw XML and pilot report before allowing the representative matrix or any production crawl.
