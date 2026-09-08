@@ -1,5 +1,7 @@
 # 한국 관세 수출입 2012–2026 — HSK 10자리 상품 수준
 
+![Korea Customs Trade Kaggle banner](assets/korea_customs_trade_kaggle_banner.jpg)
+
 [English README](README.md)
 
 이 저장소는 관세청 공식 공공데이터를 기반으로 재현 가능하고 업데이트 가능한 Kaggle 데이터 제품을 구축하기 위한 프로젝트입니다. 최종 Source of Truth의 grain은 다음과 같습니다.

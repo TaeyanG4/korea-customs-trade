@@ -1,5 +1,7 @@
 # South Korea Customs Trade 2012–2026 — 10-Digit Product Level
 
+![Korea Customs Trade Kaggle banner](assets/korea_customs_trade_kaggle_banner.jpg)
+
 [한국어 README](README.ko.md)
 
 This repository builds a reproducible Kaggle data product from official Korea Customs Service public data. The intended source-of-truth grain is:
