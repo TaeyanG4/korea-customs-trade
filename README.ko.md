@@ -61,6 +61,20 @@ country × year
 
 인증 오류, 잘못된 파라미터, 명시적인 API 오류는 split으로 숨기지 않고 그대로 실패로 남깁니다.
 
+## API 호출 한도 전략
+
+공공데이터포털 공식 페이지 기준 개발계정의 신청 가능 트래픽은 **일 10,000회**입니다. 같은 페이지에는 **활용사례 등록 후 운영계정으로 트래픽 증가 신청 가능**하다고 명시되어 있으며, 이 관세청 API의 운영단계는 심의승인입니다.
+
+이 프로젝트는 호출량을 다음 원칙으로 관리합니다.
+
+- 성공하는 경우 `country × year` 1회 요청을 우선합니다. 약 240개국 × 15년이면 root 요청은 약 3,600회입니다.
+- 성공하는 요청을 미리 quarter/month로 쪼개지 않습니다. adaptive split은 대용량 응답/timeout의 fallback으로만 사용합니다.
+- 공공데이터포털 gateway reason code `22` (`LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`)가 반환되면 collector는 추가 호출을 낭비하지 않고 즉시 중단합니다. 성공한 manifest는 그대로 checkpoint/resume에 사용됩니다.
+- pilot에서 adaptive split 비율이 높아 일 10,000회를 넘길 가능성이 확인되면 production backfill 전에 운영계정/트래픽 증설을 신청합니다.
+- 플랫폼 한도 우회를 목적으로 여러 개인계정이나 여러 키를 돌려쓰지 않습니다.
+
+공식 파일데이터 `관세청_월별_품목별_국가별 수출입실적`은 보조 검증자료로는 사용할 수 있지만 공개 설명상 2021~2023년 HS4 자료이므로 이 프로젝트의 HSK10 Source of Truth를 대체하지 않습니다.
+
 ## Windows PowerShell 실행
 
 ```powershell

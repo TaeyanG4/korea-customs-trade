@@ -174,6 +174,9 @@ def parse_year_month(value: str) -> str | None:
 def parse_and_validate_gzip(path: Path, country: str, window: Window) -> dict[str, Any]:
     result_code = None
     result_msg = None
+    gateway_reason_code = None
+    gateway_auth_msg = None
+    gateway_err_msg = None
     row_count = 0
     fact_row_count = 0
     total_row_count = 0
@@ -194,6 +197,12 @@ def parse_and_validate_gzip(path: Path, country: str, window: Window) -> dict[st
                 result_code = (elem.text or "").strip()
             elif tag == "resultMsg" and result_msg is None:
                 result_msg = (elem.text or "").strip()
+            elif tag == "returnReasonCode" and gateway_reason_code is None:
+                gateway_reason_code = (elem.text or "").strip()
+            elif tag == "returnAuthMsg" and gateway_auth_msg is None:
+                gateway_auth_msg = (elem.text or "").strip()
+            elif tag == "errMsg" and gateway_err_msg is None:
+                gateway_err_msg = (elem.text or "").strip()
             elif tag == "item":
                 row_count += 1
                 year_raw = safe_text(elem, "year")
@@ -244,6 +253,14 @@ def parse_and_validate_gzip(path: Path, country: str, window: Window) -> dict[st
     name_variants = [(hs, sorted(names)) for hs, names in hs_names.items() if len(names) > 1]
     expected_months = months_in_window(window)
     missing = sorted(set(expected_months) - months)
+
+    # data.go.kr gateway errors are commonly returned as HTTP 200 XML under
+    # cmmMsgHeader rather than the service's normal resultCode/resultMsg schema.
+    # Normalize them into the same fields so quota/auth errors are actionable.
+    if result_code is None and gateway_reason_code:
+        result_code = gateway_reason_code
+    if result_msg is None:
+        result_msg = gateway_auth_msg or gateway_err_msg
 
     return {
         "api_result_code": result_code,
@@ -419,10 +436,23 @@ def download_one(
         parse_error = f"{type(exc).__name__}: {exc}"
 
     elapsed = time.monotonic() - t0
-    api_ok = metrics.get("api_result_code") == "00"
+    api_code = metrics.get("api_result_code")
+    api_msg = (metrics.get("api_result_msg") or "").upper()
+    api_ok = api_code == "00"
     parse_ok = parse_error is None
     success = bool(api_ok and parse_ok)
-    status = "success" if success else ("api_error" if parse_ok else "parse_error")
+    daily_quota_exceeded = (
+        api_code == "22"
+        or "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS" in api_msg
+    )
+    if success:
+        status = "success"
+    elif not parse_ok:
+        status = "parse_error"
+    elif daily_quota_exceeded:
+        status = "quota_exceeded"
+    else:
+        status = "api_error"
     outcome = RequestOutcome(
         country=country,
         window_start=window.start,
@@ -886,24 +916,34 @@ def main() -> int:
                 roots.append((country.upper(), Window(f"{year}01", f"{year}12")))
 
     outcomes: list[RequestOutcome] = []
+    attempted_roots: list[tuple[str, Window]] = []
+    quota_exceeded = False
     for country, window in roots:
-        outcomes.extend(
-            collect_with_split(
-                session=session,
-                service_key=key,
-                country=country,
-                window=window,
-                data_dir=data_dir,
-                connect_timeout=args.connect_timeout,
-                read_timeout=args.read_timeout,
-                retries=args.retries,
-                force=args.force,
-                adaptive_split=not args.no_adaptive_split,
-            )
+        attempted_roots.append((country, window))
+        root_outcomes = collect_with_split(
+            session=session,
+            service_key=key,
+            country=country,
+            window=window,
+            data_dir=data_dir,
+            connect_timeout=args.connect_timeout,
+            read_timeout=args.read_timeout,
+            retries=args.retries,
+            force=args.force,
+            adaptive_split=not args.no_adaptive_split,
         )
+        outcomes.extend(root_outcomes)
+        if any(o.status == "quota_exceeded" for o in root_outcomes):
+            quota_exceeded = True
+            print(
+                "Daily data.go.kr request quota exceeded; stopping immediately and preserving "
+                "checkpoints. Re-run later to resume from successful manifests.",
+                file=sys.stderr,
+            )
+            break
 
     json_path, csv_path, report_path, inventory_path, changes_path = write_summary(
-        data_dir, outcomes, roots
+        data_dir, outcomes, attempted_roots
     )
     leaves = effective_leaf_outcomes(outcomes)
     failures = [o for o in leaves if not o.success]
@@ -912,6 +952,8 @@ def main() -> int:
     print(f"report={report_path}")
     print(f"hs_name_inventory={inventory_path}")
     print(f"hs_name_changes={changes_path}")
+    if quota_exceeded:
+        return 3
     if failures:
         print(f"unresolved_failures={len(failures)}", file=sys.stderr)
         return 2

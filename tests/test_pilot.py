@@ -14,6 +14,15 @@ SAMPLE_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
   </items></body>
 </response>'''
 
+QUOTA_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
+<OpenAPI_ServiceResponse>
+  <cmmMsgHeader>
+    <errMsg>SERVICE ERROR</errMsg>
+    <returnAuthMsg>LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR</returnAuthMsg>
+    <returnReasonCode>22</returnReasonCode>
+  </cmmMsgHeader>
+</OpenAPI_ServiceResponse>'''
+
 
 def test_parse_and_validate(tmp_path: Path):
     p = tmp_path / "x.xml.gz"
@@ -45,6 +54,16 @@ def test_detects_duplicate_and_bad_hs(tmp_path: Path):
     assert m["duplicate_key_groups"] == 1
     assert m["duplicate_key_rows"] == 1
     assert m["non_hs10_fact_rows"] == 1
+
+
+def test_parses_data_go_kr_gateway_quota_error(tmp_path: Path):
+    p = tmp_path / "quota.xml.gz"
+    with gzip.open(p, "wb") as f:
+        f.write(QUOTA_XML)
+    m = pilot.parse_and_validate_gzip(p, "US", pilot.Window("202501", "202512"))
+    assert m["api_result_code"] == "22"
+    assert m["api_result_msg"] == "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR"
+    assert m["fact_row_count"] == 0
 
 
 def test_split_year_to_quarters():
@@ -116,6 +135,27 @@ def test_stream_read_failure_is_retried_and_key_not_manifested(tmp_path: Path):
     manifest_text = Path(outcome.manifest_path).read_text(encoding="utf-8")
     assert "SECRET" not in manifest_text
     assert '"hsSgn_omitted": true' in manifest_text
+
+
+def test_quota_response_is_classified_without_retry_or_split(tmp_path: Path):
+    response = FakeResponse([QUOTA_XML])
+    session = FakeSession([response])
+    outcome = pilot.download_one(
+        session=session,
+        service_key="SECRET+KEY==",
+        country="US",
+        window=pilot.Window("202501", "202512"),
+        data_dir=tmp_path,
+        connect_timeout=1,
+        read_timeout=1,
+        retries=2,
+        force=True,
+    )
+    assert outcome.success is False
+    assert outcome.status == "quota_exceeded"
+    assert outcome.api_result_code == "22"
+    assert session.calls == 1
+    assert pilot.should_split(outcome) is False
 
 
 def test_logical_root_split_success():

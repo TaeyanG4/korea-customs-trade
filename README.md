@@ -61,6 +61,20 @@ country × year
 
 Authentication, parameter, and API-level errors are not hidden by splitting.
 
+## API quota strategy
+
+The official data.go.kr page currently lists **10,000 requests/day for a development account**. The same page states that an **operating account can request increased traffic after registering a usage case**, and this Korea Customs API requires review at the operating stage.
+
+For this project, quota should be managed conservatively:
+
+- Prefer one `country × year` request. If that succeeds consistently, roughly 240 countries × 15 years is only about 3,600 root requests.
+- Do not pre-split successful requests into quarters or months; adaptive splitting is only a fallback for oversized/time-out responses.
+- If data.go.kr returns gateway reason code `22` (`LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`), the collector stops the run immediately instead of wasting more calls. Successful manifests remain resumable.
+- Apply for an operating account / traffic increase before the production backfill if pilot measurements show that adaptive splitting could push the run above the daily allowance.
+- Do not use multiple personal accounts or keys to bypass platform limits.
+
+The public file dataset named `관세청_월별_품목별_국가별 수출입실적` is useful as an auxiliary official reference, but its published coverage is HS4 for 2021–2023, so it is not a substitute for this project's HSK10 source of truth.
+
 ## Setup on Windows PowerShell
 
 ```powershell
