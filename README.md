@@ -29,11 +29,21 @@ No full crawl should begin until this pilot passes.
 
 Current stage: **11/12 — reconciliation and release QA**. Stages 1–10 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
 
+The final product target is **Kaggle Usability 10.00 plus a Dataset medal**. The project avoids over-cleaning official source data and instead emphasizes reproducibility, analyst-ready grains, documentation, updateability, and encoding-safe Korean text.
+
 The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
 
 The official KCS lookup workbook currently yields **269 unique country codes**. All 269 were accepted by a live 2025-01 API validation; 236 had trade rows that month and 33 returned no trade rows. The all-code January census contained **128,207 fact rows**, all numeric HSK10. The full-history planning band is roughly **22–35 million rows** and the production root-request count is **4,035** (269 codes × 15 calendar-year windows) before adaptive splits.
 
-Stage 8 measured Parquet on 1,756,794 real canonical rows: HSK10 was **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, and HS2 **1.06 MB**. The sample had 0 duplicate keys, 0 partition mismatches, and 0 fatal normalization anomalies. Projecting the measured ratios onto the planning band gives roughly **451–717 MB for HSK10** and **0.83–1.33 GB combined for HSK10+HS6+HS4+HS2**.
+Stage 8 measured Parquet on 1,756,794 real canonical rows: HSK10 was **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, and HS2 **1.06 MB**. Stage 11 adds HS8 and residual-aware aggregate metadata, so the final release size may be somewhat larger than that early estimate; the completed rebuild will record actual sizes in the release manifest.
+
+Run the complete Stage 11 rebuild with:
+
+```powershell
+.\run_stage11.ps1
+```
+
+This requires full country-month coverage, links annual HSK revisions, builds HS8/HS6/HS4/HS2 residual-aware analyst tables, and runs Korean-text/UTF-8 release gates.
 
 Country-code authority policy:
 

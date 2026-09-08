@@ -29,11 +29,21 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 현재 단계는 **11/12 — reconciliation 및 release QA**입니다. 1~10단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
 
+최종 제품 목표는 **Kaggle Usability 10.00 + Dataset medal**입니다. 원천 데이터를 과도하게 정제하지 않고, 공식성·재현성·분석 편의성·문서화·지속 업데이트·한글 무결성을 중심으로 완성도를 높입니다.
+
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
 
 공식 KCS 조회코드 workbook에서 **269개 고유 국가코드**를 확보했습니다. 269개 전부를 2025-01 API로 검증한 결과 모두 정상 `resultCode=00`이었고, 236개는 해당 월 거래 row가 있었으며 33개는 거래가 없었습니다. 269개 전체에서 **128,207 fact rows**가 관측됐고 모두 숫자형 HSK10이었습니다. full-history planning band는 약 **2,200만~3,500만 rows**, production root request는 **4,035회**입니다.
 
-8단계에서 실제 canonical 1,756,794 rows로 Parquet을 측정했습니다. HSK10 **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, HS2 **1.06 MB**였고 duplicate 0, partition mismatch 0, fatal normalization anomaly 0이었습니다. 이 비율을 planning band에 적용하면 HSK10은 약 **451~717 MB**, HSK10+HS6+HS4+HS2 전체는 약 **0.83~1.33 GB**로 예상합니다.
+8단계에서 실제 canonical 1,756,794 rows로 Parquet을 측정했습니다. HSK10 **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, HS2 **1.06 MB**였고 duplicate 0, partition mismatch 0, fatal normalization anomaly 0이었습니다. 11단계에서는 HS8과 residual-aware 집계 metadata가 추가되므로 최종 release 크기는 초기 추정보다 다소 커질 수 있으며, 실제 전체 rebuild 결과를 release manifest에 기록합니다.
+
+Stage 11 전체 재빌드는 다음 명령으로 실행합니다.
+
+```powershell
+.\run_stage11.ps1
+```
+
+이 명령은 full country-month coverage를 요구하고, annual HSK revision 연결, HS8/HS6/HS4/HS2 residual-aware 집계, 한글/UTF-8 release gate까지 순차 실행합니다.
 
 국가코드 authority 정책은 다음과 같습니다.
 

@@ -6,6 +6,8 @@ Last updated: 2026-09-08
 
 Current stage: **11/12 — reconciliation and release QA**
 
+Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleaning; preserve official source truth and prioritize analyst usability, documentation, reproducibility, and encoding-safe release files.
+
 1. Project status / README refresh for the active API key
 2. US x 2025 full-year pilot with `hsSgn` omitted
 3. Inspect pilot results and validate the central HSK10 hypothesis
@@ -57,19 +59,22 @@ Current stage: **11/12 — reconciliation and release QA**
 - Refresh mode refetches the latest stable month plus the preceding 12 months (13 inclusive months) and currently resolves to 2025-07 through 2026-07.
 - Production smoke tests passed both checkpoint reuse (US 2025) and a new live annual request (AD 2025, 101 rows).
 - Revision-safe source selection implemented: each `(country, month)` uses exactly one latest successful request manifest, preventing duplicate normalized facts when refresh windows overlap historical backfill windows.
-- Strict HSK10 normalization implemented with canonical 12-column schema and nullable `hs_revision` pending stage 10.
+- Strict HSK10 normalization now uses the canonical 13-column schema including `hs8`; `hs_revision` is populated from the official annual CLIP HSK reference when `(year, hs10)` exists and otherwise remains null with an audit entry.
 - Parquet layout uses `year=YYYY/mm=MM` partitions to avoid a Hive partition-name collision with the canonical `month=YYYYMM` column.
 - Current real-data normalization sample: 1,756,794 canonical HSK10 rows, 5 non-HSK10 upstream anomalies quarantined, 48 monthly files, 0 duplicate keys, 0 partition mismatches, 0 fatal anomalies.
 - Sample HSK10 Parquet size: 36,000,067 bytes (~20.5 bytes/input row), normalized in about 33 seconds.
-- HS6/HS4/HS2 are derived locally from HSK10 only; aggregate totals reconcile exactly to HSK10 for all monetary/weight measures.
-- Current derived sample: HS6 1,091,103 rows / 21.84 MB; HS4 353,003 / 7.68 MB; HS2 39,934 / 1.06 MB.
+- HS8/HS6/HS4/HS2 are derived locally from strict HSK10. Numeric non-HSK10 source residuals are included only at hierarchy levels that can be identified safely from the existing prefix; no padding or allocation is inferred.
+- The older stage-8 sample measured HS6 1,091,103 rows / 21.84 MB; HS4 353,003 / 7.68 MB; HS2 39,934 / 1.06 MB. Stage 11 will replace these with full-history HS8/HS6/HS4/HS2 outputs and actual final sizes.
 - Full historical backfill completed: 4,035/4,035 scheduled roots succeeded, 22,351,483 fact rows collected, 343 successful checkpoints reused, 0 unresolved failures.
 - Durable analyst-facing data model is documented in `DATA_MODEL.md` / `DATA_MODEL.ko.md`: separate HS2/HS4/HS6/HS8/HSK10 files, strict HSK10 canonical grain, non-HSK10 quarantine, and residual-aware upper-level aggregation without guessing.
 - Official revision-reference source selected: Korea Customs Service CLIP annual Korean tariff tables, available across the project period.
 - `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, combined Parquet output, duplicate-label audits, and adjacent-year revision-transition review.
 - Stage 10 full collection completed for 2012–2026. The combined official HSK reference contains 178,911 `(reference_year, hs10)` rows with 0 missing Korean names, 0 missing English names, 0 invalid HSK10 values, 0 duplicate annual keys, and 0 prefix mismatches.
 - Three same-code source label variants were observed: two compatible 2012 wording expansions and one 2022 revision-boundary conflict. The 2022 conflict was resolved automatically against the adjacent 2021/2023 annual editions; unresolved duplicate-label reviews: 0.
-- Full test suite currently passes: 33 tests.
+- Full test suite currently passes: 39 tests after the stage-11 residual/encoding/reconciliation QA additions.
+- Stage 11 code now targets annual HSK revision linkage, HS8/HS6/HS4/HS2 residual-aware analyst aggregates, and an automated Korean-text/UTF-8 release gate. Canonical source facts are not dropped merely because an HSK10 is absent from the annual CLIP reference; such rows keep a null revision and are audited.
+- Stage 11 dry-run confirms complete source selection: 4,035 successful source manifests, 47,075/47,075 country-month assignments, 2012-01 through 2026-07, and 0 overlap assignments.
+- A real US x 2025 stage-11 normalization smoke produced 77,606 canonical rows, 0 fatal anomalies, exact USD/trade-balance agreement with the response summary, and only 740 kg of accepted cumulative row-level weight rounding across 77,606 facts. Two January 2025 HSK10 codes are absent from the 2025 CLIP annual edition but exist through the 2024 edition; they remain canonical with null `hs_revision` and are audited rather than reassigned by inference.
 
 ## Pending live work
 

@@ -211,6 +211,10 @@ Before public release:
 
 The product goal is not merely to publish the largest Korean customs file. It is to make South Korean customs trade unusually easy to analyze:
 
+The product target is **Kaggle Usability 10.00 plus a Dataset medal**, without over-cleaning official source data. We prioritize reproducible official sourcing, clear grains, ready-to-use Parquet, documentation, stable updates, and auditable quality over cosmetic rewriting.
+
+Korean-text integrity is a release blocker. Upload-facing CSV/Markdown must decode strictly as UTF-8, and Korean reference fields must not contain replacement characters, invalid controls, or decoding damage that removes Hangul. Source exceptions are preserved faithfully rather than rewritten merely to satisfy QA.
+
 - HS2 for quick macro exploration;
 - HS4 for industry analysis;
 - HS6 for internationally comparable product analysis;
@@ -218,4 +222,3 @@ The product goal is not merely to publish the largest Korean customs file. It is
 - HSK10 for high-resolution supply-chain research;
 - Parquet as the primary distribution format;
 - optional DuckDB/convenience views may be added later, but Parquet remains canonical for release.
-

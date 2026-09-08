@@ -28,11 +28,28 @@ import pyarrow.parquet as pq
 import pilot
 
 
+MEASURES = [
+    "export_usd",
+    "export_weight_kg",
+    "import_usd",
+    "import_weight_kg",
+    "trade_balance_usd",
+]
+XML_MEASURE_FIELDS = {
+    "export_usd": "expDlr",
+    "export_weight_kg": "expWgt",
+    "import_usd": "impDlr",
+    "import_weight_kg": "impWgt",
+    "trade_balance_usd": "balPayments",
+}
+
+
 SCHEMA = pa.schema(
     [
         pa.field("month", pa.string(), nullable=False),
         pa.field("country_code", pa.string(), nullable=False),
         pa.field("hs10", pa.string(), nullable=False),
+        pa.field("hs8", pa.string(), nullable=False),
         pa.field("hs6", pa.string(), nullable=False),
         pa.field("hs4", pa.string(), nullable=False),
         pa.field("hs2", pa.string(), nullable=False),
@@ -46,7 +63,7 @@ SCHEMA = pa.schema(
     metadata={
         b"dataset": b"South Korea Customs Trade - strict HSK10 facts",
         b"month_format": b"YYYYMM",
-        b"hs_revision_note": b"nullable until revision-aware HSK dimension is built in stage 10",
+        b"hs_revision_note": b"official annual KCS CLIP HSK edition when the code is present; otherwise null",
     },
 )
 
@@ -122,6 +139,31 @@ def load_country_reference(path: Path) -> set[str]:
     if not codes:
         raise RuntimeError("country reference is empty")
     return codes
+
+
+def load_hsk_revision_map(path: Path) -> dict[int, dict[str, str]]:
+    """Load the official annual HSK reference as year -> HSK10 -> revision.
+
+    A missing code is not treated as a normalization failure. Trade rows can
+    legitimately expose sub-annual source/revision edge cases that are not
+    represented by CLIP's annual selector, so unknown codes remain canonical
+    facts with a null ``hs_revision`` and are audited separately.
+    """
+    if not path.exists():
+        raise RuntimeError(f"HSK reference not found: {path}")
+    table = pq.ParquetFile(path).read(columns=["reference_year", "hs10", "hs_revision"])
+    revisions: dict[int, dict[str, str]] = defaultdict(dict)
+    for row in table.to_pylist():
+        year = int(row["reference_year"])
+        hs10 = str(row["hs10"])
+        revision = str(row["hs_revision"])
+        existing = revisions[year].get(hs10)
+        if existing is not None and existing != revision:
+            raise RuntimeError(f"conflicting HSK revision for {year}/{hs10}: {existing} vs {revision}")
+        revisions[year][hs10] = revision
+    if not revisions:
+        raise RuntimeError("HSK reference is empty")
+    return dict(revisions)
 
 
 def discover_successful_sources(
@@ -261,7 +303,49 @@ def as_required_int(elem: ET.Element, name: str) -> int:
     return value
 
 
-def canonical_row(elem: ET.Element, country: str, month: str, hs: str) -> dict[str, Any]:
+def measure_values(elem: ET.Element) -> dict[str, int] | None:
+    values: dict[str, int] = {}
+    for canonical, xml_name in XML_MEASURE_FIELDS.items():
+        value = pilot.as_int(pilot.safe_text(elem, xml_name))
+        if value is None:
+            return None
+        values[canonical] = value
+    return values
+
+
+def classify_summary_differences(
+    fact_totals: dict[str, int],
+    summary_totals: dict[str, int],
+    fact_rows: int,
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Split raw-summary differences into fatal and accepted rounding deltas.
+
+    Monetary fields and trade balance must match exactly. Detailed weights are
+    published as integer kilograms, so summing row-level rounded values can
+    differ slightly from the response-level total. A conservative upper bound
+    of one kilogram per detailed fact row is accepted and fully audited.
+    """
+    fatal: dict[str, int] = {}
+    accepted_rounding: dict[str, int] = {}
+    weight_tolerance = max(1, fact_rows)
+    for measure in MEASURES:
+        difference = fact_totals[measure] - summary_totals[measure]
+        if difference == 0:
+            continue
+        if measure in {"export_weight_kg", "import_weight_kg"} and abs(difference) <= weight_tolerance:
+            accepted_rounding[measure] = difference
+        else:
+            fatal[measure] = difference
+    return fatal, accepted_rounding
+
+
+def canonical_row(
+    elem: ET.Element,
+    country: str,
+    month: str,
+    hs: str,
+    hs_revision: str | None = None,
+) -> dict[str, Any]:
     exp_usd = as_required_int(elem, "expDlr")
     exp_wgt = as_required_int(elem, "expWgt")
     imp_usd = as_required_int(elem, "impDlr")
@@ -275,6 +359,7 @@ def canonical_row(elem: ET.Element, country: str, month: str, hs: str) -> dict[s
         "month": month,
         "country_code": country,
         "hs10": hs,
+        "hs8": hs[:8],
         "hs6": hs[:6],
         "hs4": hs[:4],
         "hs2": hs[:2],
@@ -283,7 +368,7 @@ def canonical_row(elem: ET.Element, country: str, month: str, hs: str) -> dict[s
         "import_usd": imp_usd,
         "import_weight_kg": imp_wgt,
         "trade_balance_usd": balance,
-        "hs_revision": None,
+        "hs_revision": hs_revision,
     }
 
 
@@ -347,10 +432,13 @@ class MonthWriter:
 def normalize_sources(
     assignments: dict[str, dict[Path, tuple[SourceManifest, set[str]]]],
     staging_root: Path,
+    hsk_revisions: dict[int, dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     stats: Counter[str] = Counter()
     anomalies: list[dict[str, Any]] = []
     partition_rows: dict[str, int] = {}
+    unknown_reference_codes: dict[tuple[int, str], dict[str, Any]] = {}
+    summary_mismatch_details: list[dict[str, Any]] = []
 
     def get_writer(writers: dict[str, MonthWriter], year: str, month: str) -> MonthWriter:
         writer = writers.get(month)
@@ -367,6 +455,11 @@ def normalize_sources(
                 assignments[year].items(), key=lambda kv: (kv[1][0].country, str(kv[0]))
             ):
                 seen: set[tuple[str, str]] = set()
+                full_source_selected = assigned_months == set(pilot.months_in_window(source.window))
+                source_summary: dict[str, int] | None = None
+                source_fact_totals = {measure: 0 for measure in MEASURES}
+                source_fact_numeric_ok = True
+                source_fact_rows = 0
                 with gzip.open(source.raw_path, "rb") as fh:
                     for _, elem in ET.iterparse(fh, events=("end",)):
                         if pilot.strip_ns(elem.tag) != "item":
@@ -375,6 +468,10 @@ def normalize_sources(
                         month = pilot.parse_year_month(pilot.safe_text(elem, "year"))
                         hs = pilot.safe_text(elem, "hsCd")
                         if month is None or hs in {"", "-"}:
+                            if full_source_selected and hs in {"", "-"}:
+                                candidate = measure_values(elem)
+                                if candidate is not None:
+                                    source_summary = candidate
                             stats["summary_or_nonfact_rows"] += 1
                             elem.clear()
                             continue
@@ -382,6 +479,14 @@ def normalize_sources(
                             stats["superseded_month_rows_skipped"] += 1
                             elem.clear()
                             continue
+                        stats["assigned_fact_rows"] += 1
+                        source_fact_rows += 1
+                        raw_values = measure_values(elem)
+                        if raw_values is None:
+                            source_fact_numeric_ok = False
+                        else:
+                            for measure in MEASURES:
+                                source_fact_totals[measure] += raw_values[measure]
                         stat_cd = pilot.safe_text(elem, "statCd")
                         if stat_cd and stat_cd != source.country:
                             anomalies.append(anomaly_row(elem, source, month, hs, "country_mismatch"))
@@ -401,7 +506,20 @@ def normalize_sources(
                             continue
                         seen.add(key)
                         try:
-                            row = canonical_row(elem, source.country, month, hs)
+                            revision = None
+                            if hsk_revisions is not None:
+                                revision = hsk_revisions.get(int(month[:4]), {}).get(hs)
+                                if revision is None:
+                                    unknown = unknown_reference_codes.setdefault(
+                                        (int(month[:4]), hs),
+                                        {"fact_rows": 0, "months": set(), "name_ko_variants": set()},
+                                    )
+                                    unknown["fact_rows"] += 1
+                                    unknown["months"].add(month)
+                                    name_ko = pilot.safe_text(elem, "statKor")
+                                    if name_ko:
+                                        unknown["name_ko_variants"].add(name_ko)
+                            row = canonical_row(elem, source.country, month, hs, revision)
                         except ValueError as exc:
                             anomalies.append(anomaly_row(elem, source, month, hs, str(exc)))
                             stats["fatal_anomalies"] += 1
@@ -414,6 +532,38 @@ def normalize_sources(
                             writer.write(buffers[month])
                             buffers[month].clear()
                         elem.clear()
+
+                if full_source_selected:
+                    if source_summary is None:
+                        stats["source_summary_missing"] += 1
+                    elif not source_fact_numeric_ok:
+                        stats["source_summary_unavailable_numeric"] += 1
+                    else:
+                        stats["source_summary_checked"] += 1
+                        mismatch, accepted_rounding = classify_summary_differences(
+                            source_fact_totals, source_summary, source_fact_rows
+                        )
+                        if mismatch:
+                            stats["source_summary_mismatches"] += 1
+                            summary_mismatch_details.append(
+                                {
+                                    "country_code": source.country,
+                                    "window_start": source.window_start,
+                                    "window_end": source.window_end,
+                                    "source_manifest": str(source.manifest_path),
+                                    "differences_fact_minus_summary": mismatch,
+                                    "accepted_weight_rounding_fact_minus_summary": accepted_rounding,
+                                    "fact_rows": source_fact_rows,
+                                }
+                            )
+                        else:
+                            stats["source_summary_matches"] += 1
+                            if accepted_rounding:
+                                stats["source_summary_weight_rounding_sources"] += 1
+                                stats["source_summary_weight_rounding_fields"] += len(accepted_rounding)
+                                stats["source_summary_weight_rounding_abs_kg"] += sum(
+                                    abs(value) for value in accepted_rounding.values()
+                                )
 
             for month, rows in sorted(buffers.items()):
                 if rows:
@@ -433,7 +583,43 @@ def normalize_sources(
     stats_dict: dict[str, Any] = dict(stats)
     stats_dict["partition_rows"] = dict(sorted(partition_rows.items()))
     stats_dict["partition_count"] = len(partition_rows)
+    stats_dict["hsk_reference_unknown_rows"] = sum(
+        int(info["fact_rows"]) for info in unknown_reference_codes.values()
+    )
+    stats_dict["hsk_reference_unknown_unique"] = len(unknown_reference_codes)
+    stats_dict["hsk_reference_unknown_codes"] = [
+        {
+            "reference_year": year,
+            "hs10": hs10,
+            "fact_rows": int(info["fact_rows"]),
+            "months": ",".join(sorted(info["months"])),
+            "name_ko_variants": " | ".join(sorted(info["name_ko_variants"])),
+        }
+        for (year, hs10), info in sorted(unknown_reference_codes.items())
+    ]
+    stats_dict["summary_mismatch_details"] = summary_mismatch_details
+    stats_dict["stored_row_reconciliation"] = {
+        "assigned_fact_rows": int(stats.get("assigned_fact_rows", 0)),
+        "canonical_rows": int(stats.get("canonical_rows", 0)),
+        "non_hs10_rows": int(stats.get("non_hs10_rows", 0)),
+        "fatal_anomalies": int(stats.get("fatal_anomalies", 0)),
+        "reconciles": int(stats.get("assigned_fact_rows", 0))
+        == int(stats.get("canonical_rows", 0))
+        + int(stats.get("non_hs10_rows", 0))
+        + int(stats.get("fatal_anomalies", 0)),
+    }
     return stats_dict, anomalies
+
+
+def write_unknown_reference_audit(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(
+            f,
+            fieldnames=["reference_year", "hs10", "fact_rows", "months", "name_ko_variants"],
+        )
+        w.writeheader()
+        w.writerows(rows)
 
 
 def write_anomaly_audit(base: Path, anomalies: list[dict[str, Any]]) -> tuple[Path, Path]:
@@ -523,6 +709,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Normalize selected KCS raw XML to strict HSK10 Parquet")
     p.add_argument("--data-dir", default="data")
     p.add_argument("--country-reference", default="data/reference/country_reference.csv")
+    p.add_argument("--hsk-reference", default="data/reference/hsk_code_reference.parquet")
     p.add_argument("--output", default="data/normalized/hs10")
     p.add_argument("--start-month", default=None)
     p.add_argument("--end-month", default=None)
@@ -537,8 +724,10 @@ def main() -> int:
     t0 = time.monotonic()
     data_dir = Path(args.data_dir).resolve()
     country_ref = Path(args.country_reference).resolve()
+    hsk_ref = Path(args.hsk_reference).resolve()
     target = Path(args.output).resolve()
     official_codes = load_country_reference(country_ref)
+    hsk_revisions = load_hsk_revision_map(hsk_ref)
     sources, missing_raw = discover_successful_sources(data_dir, official_codes)
     if missing_raw:
         raise SystemExit(f"successful manifests with missing raw files: {len(missing_raw)}")
@@ -579,8 +768,10 @@ def main() -> int:
     staging.mkdir(parents=True, exist_ok=True)
 
     assignments = selected_assignments(selected)
-    stats, anomalies = normalize_sources(assignments, staging)
+    stats, anomalies = normalize_sources(assignments, staging, hsk_revisions)
     anomaly_csv, anomaly_parquet = write_anomaly_audit(audit_dir, anomalies)
+    unknown_reference_csv = audit_dir / "hsk_reference_unknown_codes.csv"
+    write_unknown_reference_audit(unknown_reference_csv, stats["hsk_reference_unknown_codes"])
     verify = verify_parquet_dataset(staging)
     fatal = int(stats.get("fatal_anomalies", 0))
     canonical_rows = int(stats.get("canonical_rows", 0))
@@ -588,11 +779,16 @@ def main() -> int:
         fatal += 1
     if not verify["schema_ok"] or verify["partition_month_mismatches"] or verify["duplicate_keys"]:
         fatal += 1
+    if int(stats.get("source_summary_mismatches", 0)):
+        fatal += 1
+    if not bool((stats.get("stored_row_reconciliation") or {}).get("reconciles")):
+        fatal += 1
 
     manifest = {
         "generated_at": utc_now(),
         "data_dir": str(data_dir),
         "country_reference": str(country_ref),
+        "hsk_reference": str(hsk_ref),
         "output": str(target),
         "start_month": args.start_month,
         "end_month": args.end_month,
@@ -608,8 +804,25 @@ def main() -> int:
         "source_selection_csv": str(selection_path),
         "anomaly_csv": str(anomaly_csv),
         "anomaly_parquet": str(anomaly_parquet),
+        "hsk_reference_unknown_csv": str(unknown_reference_csv),
+        "hsk_reference_unknown_rows": stats["hsk_reference_unknown_rows"],
+        "hsk_reference_unknown_unique": stats["hsk_reference_unknown_unique"],
+        "source_summary_checked": int(stats.get("source_summary_checked", 0)),
+        "source_summary_matches": int(stats.get("source_summary_matches", 0)),
+        "source_summary_mismatches": int(stats.get("source_summary_mismatches", 0)),
+        "source_summary_missing": int(stats.get("source_summary_missing", 0)),
+        "source_summary_weight_rounding_sources": int(
+            stats.get("source_summary_weight_rounding_sources", 0)
+        ),
+        "source_summary_weight_rounding_abs_kg": int(
+            stats.get("source_summary_weight_rounding_abs_kg", 0)
+        ),
+        "stored_row_reconciliation": stats.get("stored_row_reconciliation"),
         "elapsed_seconds": round(time.monotonic() - t0, 3),
-        "hs_revision_policy": "nullable until stage 10; no revision is inferred in stage 8",
+        "hs_revision_policy": (
+            "Use the official annual KCS CLIP HSK edition only when (reference_year, hs10) is present; "
+            "otherwise keep hs_revision null and audit the code without dropping the trade fact."
+        ),
     }
     audit_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = audit_dir / "normalization_manifest.json"

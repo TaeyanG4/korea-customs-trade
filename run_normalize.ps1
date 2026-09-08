@@ -1,2 +1,2 @@
 $ErrorActionPreference = 'Stop'
-python .\normalize.py --overwrite
+python .\normalize.py --require-full-coverage --overwrite
