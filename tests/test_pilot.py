@@ -1,4 +1,5 @@
 import gzip
+import os
 from pathlib import Path
 
 import pilot
@@ -78,6 +79,22 @@ def test_split_year_to_quarters():
 
 def test_normalize_service_key():
     assert pilot.normalize_service_key("abc%2Bdef%3D%3D") == "abc+def=="
+
+
+def test_redact_service_key():
+    text = "403 for https://example.test/x?serviceKey=abc%2Bdef%3D%3D&cntyCd=US"
+    redacted = pilot.redact_service_key(text)
+    assert "abc" not in redacted
+    assert "serviceKey=[REDACTED]" in redacted
+    assert "cntyCd=US" in redacted
+
+
+def test_load_local_dotenv(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("KCS_SERVICE_KEY", raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text("# comment\nKCS_SERVICE_KEY=from-dotenv\n", encoding="utf-8")
+    pilot.load_local_dotenv(env_file)
+    assert os.environ["KCS_SERVICE_KEY"] == "from-dotenv"
 
 
 class FakeResponse:

@@ -87,6 +87,14 @@ python -m pip install -r requirements.txt
 $env:KCS_SERVICE_KEY='YOUR_DATA_GO_KR_SERVICE_KEY'
 ```
 
+또는 프로젝트 루트의 로컬 `.env` 파일에 다음처럼 저장할 수 있습니다.
+
+```text
+KCS_SERVICE_KEY=YOUR_DATA_GO_KR_SERVICE_KEY
+```
+
+collector는 프로세스 환경변수에 키가 없을 때 `.env`를 자동으로 읽습니다. `.env`는 Git에서 제외됩니다.
+
 첫 pilot 실행:
 
 ```powershell

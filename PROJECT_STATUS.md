@@ -26,10 +26,12 @@ Last updated: 2026-09-08
 - Unit tests for parsing, validation, retry, secret exclusion, and split aggregation.
 - data.go.kr gateway quota code 22 detection; a quota-exhausted run stops immediately instead of continuing across the matrix.
 - Official quota strategy documented: development 10,000 requests/day; operating account can request more traffic after registering a usage case.
+- Local `.env` auto-loading for `KCS_SERVICE_KEY`; process-level environment variables still take precedence.
+- Service keys are redacted from exception URLs before manifests are written.
 
 ## Pending live work
 
-The local `KCS_SERVICE_KEY` has been configured, but the current data.go.kr daily allowance is exhausted. Live calls should resume after quota availability returns or after an approved traffic increase.
+The local `KCS_SERVICE_KEY` has been configured. A live probe on 2026-09-08 reached data.go.kr but returned HTTP 403 / reason code 30 (`SERVICE_KEY_IS_NOT_REGISTERED_ERROR`), so the crawl is currently blocked on service-key registration/activation rather than request-volume handling.
 
 1. Apply for an operating account / increased traffic allowance if available for the current usage application.
 2. When quota is available, run US x 2025 with `hsSgn` omitted.

@@ -99,6 +99,36 @@ def normalize_service_key(value: str) -> str:
     return unquote(value)
 
 
+def load_local_dotenv(path: Path | None = None) -> None:
+    """Load simple KEY=VALUE pairs from a local .env without overwriting env vars."""
+    env_path = path or (Path.cwd() / ".env")
+    if not env_path.exists():
+        return
+    try:
+        lines = env_path.read_text(encoding="utf-8-sig").splitlines()
+    except OSError:
+        return
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key or key in os.environ:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ[key] = value
+
+
+def redact_service_key(text: str | None) -> str | None:
+    """Remove serviceKey query values from exception/log strings."""
+    if text is None:
+        return None
+    return re.sub(r"(?i)(serviceKey=)[^&\s]+", r"\1[REDACTED]", text)
+
+
 def yyyymm_to_index(s: str) -> int:
     y, m = int(s[:4]), int(s[4:])
     return y * 12 + (m - 1)
@@ -407,7 +437,7 @@ def download_one(
                     retry_count=retry_count,
                     raw_path=str(raw_path),
                     manifest_path=str(manifest_path),
-                    exception=f"{type(exc).__name__}: {exc}",
+                    exception=redact_service_key(f"{type(exc).__name__}: {exc}"),
                     parent_request=parent_request,
                 )
                 manifest = asdict(outcome) | {
@@ -881,6 +911,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def get_service_key(cli_value: str | None) -> str:
+    load_local_dotenv()
     raw = (
         cli_value
         or os.getenv("KCS_SERVICE_KEY")

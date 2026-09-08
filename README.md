@@ -87,6 +87,14 @@ python -m pip install -r requirements.txt
 $env:KCS_SERVICE_KEY='YOUR_DATA_GO_KR_SERVICE_KEY'
 ```
 
+Alternatively, create a local `.env` file in the project root:
+
+```text
+KCS_SERVICE_KEY=YOUR_DATA_GO_KR_SERVICE_KEY
+```
+
+The collector loads `.env` automatically when the process environment does not already contain the key. `.env` is excluded from Git.
+
 Run the first pilot:
 
 ```powershell
