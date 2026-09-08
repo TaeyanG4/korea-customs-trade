@@ -116,7 +116,62 @@ def parse_year_index(html: str, requested_year: int) -> YearIndex:
     )
 
 
-def parse_chapter_html(html: str, year_index: YearIndex, chapter: str) -> list[dict[str, Any]]:
+def labels_compatible(a: str | None, b: str | None) -> bool:
+    """Return True when two CLIP labels are identical or one expands the other."""
+    aa = (a or "").strip()
+    bb = (b or "").strip()
+    if not aa or not bb or aa == bb:
+        return True
+    return aa.startswith(bb) or bb.startswith(aa)
+
+
+def resolve_duplicate_row(
+    previous: dict[str, Any],
+    current: dict[str, Any],
+    chapter: str,
+    duplicate_audit: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """Resolve compatible duplicate labels while failing closed on conflicts."""
+    non_name_fields = [k for k in previous if k not in {"name_ko", "name_en"}]
+    if any(previous[k] != current[k] for k in non_name_fields):
+        raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
+    if not labels_compatible(previous.get("name_ko"), current.get("name_ko")):
+        raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
+    if not labels_compatible(previous.get("name_en"), current.get("name_en")):
+        raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
+
+    def score(row: dict[str, Any]) -> tuple[int, int, int]:
+        ko = row.get("name_ko") or ""
+        en = row.get("name_en") or ""
+        return (int(bool(ko)) + int(bool(en)), len(ko) + len(en), len(ko))
+
+    selected = current if score(current) > score(previous) else previous
+    if duplicate_audit is not None:
+        duplicate_audit.append(
+            {
+                "reference_year": previous["reference_year"],
+                "chapter": chapter,
+                "hs10": previous["hs10"],
+                "name_ko_variants": sorted(
+                    {x for x in [previous.get("name_ko"), current.get("name_ko")] if x}
+                ),
+                "name_en_variants": sorted(
+                    {x for x in [previous.get("name_en"), current.get("name_en")] if x}
+                ),
+                "selected_name_ko": selected.get("name_ko"),
+                "selected_name_en": selected.get("name_en"),
+                "resolution": "prefer_more_specific_compatible_label",
+            }
+        )
+    return selected
+
+
+def parse_chapter_html(
+    html: str,
+    year_index: YearIndex,
+    chapter: str,
+    duplicate_audit: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     soup = BeautifulSoup(html, "html.parser")
     rows: dict[str, dict[str, Any]] = {}
     for tr in soup.select("#tblLstBody tr"):
@@ -149,8 +204,9 @@ def parse_chapter_html(html: str, year_index: YearIndex, chapter: str) -> list[d
         }
         previous = rows.get(code)
         if previous is not None and previous != row:
-            raise ValueError(f"conflicting duplicate HSK10 {code} in chapter {chapter}")
-        rows[code] = row
+            rows[code] = resolve_duplicate_row(previous, row, chapter, duplicate_audit)
+        else:
+            rows[code] = row
     return [rows[code] for code in sorted(rows)]
 
 
@@ -267,6 +323,7 @@ def collect_year(
 
     rows: dict[str, dict[str, Any]] = {}
     source_files: list[dict[str, Any]] = []
+    duplicate_name_variants: list[dict[str, Any]] = []
     fetched = 0
     cached = int(index_cached)
     for seq, chapter in enumerate(selected_chapters, 1):
@@ -278,7 +335,9 @@ def collect_year(
             cached += 1
         else:
             fetched += 1
-        chapter_rows = parse_chapter_html(decode_html(payload), index, chapter)
+        chapter_rows = parse_chapter_html(
+            decode_html(payload), index, chapter, duplicate_name_variants
+        )
         for row in chapter_rows:
             code = row["hs10"]
             previous = rows.get(code)
@@ -325,6 +384,8 @@ def collect_year(
         "hsk10_rows": len(rows),
         "missing_name_ko": sum(not r["name_ko"] for r in rows.values()),
         "missing_name_en": sum(not r["name_en"] for r in rows.values()),
+        "duplicate_name_variant_count": len(duplicate_name_variants),
+        "duplicate_name_variants": duplicate_name_variants,
         "fetched_files": fetched,
         "cached_files": cached,
         "annual_parquet": str(annual_path),

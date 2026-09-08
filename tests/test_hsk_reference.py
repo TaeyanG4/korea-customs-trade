@@ -1,3 +1,5 @@
+import pytest
+
 from hsk_reference import YearIndex, parse_chapter_html, parse_year_index
 
 
@@ -64,3 +66,45 @@ def test_parse_chapter_rejects_cross_chapter_code():
         assert "out-of-prefix" in str(exc)
     else:
         raise AssertionError("expected out-of-prefix HSK10 to fail")
+
+
+def test_parse_chapter_resolves_compatible_duplicate_label():
+    idx = YearIndex(2012, "20120101", "20120101", ("71",))
+    html = """
+    <table><tbody id="tblLstBody">
+      <tr>
+        <td><input name="hsSgn_Mn" value="7102390000" /></td>
+        <td class="hlzoneWrd">기타</td><td class="hlzoneWrd">Other</td>
+      </tr>
+      <tr>
+        <td><input name="hsSgn_Mn" value="7102390000" /></td>
+        <td class="hlzoneWrd">기타(공업용 다이아몬드와 원석을 제외한 가공된 다이아몬드)</td>
+        <td class="hlzoneWrd">Other</td>
+      </tr>
+    </tbody></table>
+    """
+    audit = []
+    rows = parse_chapter_html(html, idx, "71", audit)
+    assert len(rows) == 1
+    assert rows[0]["name_ko"].startswith("기타(")
+    assert rows[0]["name_en"] == "Other"
+    assert len(audit) == 1
+    assert audit[0]["resolution"] == "prefer_more_specific_compatible_label"
+
+
+def test_parse_chapter_rejects_contradictory_duplicate_label():
+    idx = YearIndex(2012, "20120101", "20120101", ("71",))
+    html = """
+    <table><tbody id="tblLstBody">
+      <tr>
+        <td><input name="hsSgn_Mn" value="7102390000" /></td>
+        <td class="hlzoneWrd">기타</td><td class="hlzoneWrd">Other</td>
+      </tr>
+      <tr>
+        <td><input name="hsSgn_Mn" value="7102390000" /></td>
+        <td class="hlzoneWrd">완전히 다른 품명</td><td class="hlzoneWrd">Different</td>
+      </tr>
+    </tbody></table>
+    """
+    with pytest.raises(ValueError, match="conflicting duplicate HSK10"):
+        parse_chapter_html(html, idx, "71")
