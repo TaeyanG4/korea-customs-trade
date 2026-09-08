@@ -30,7 +30,25 @@ The output is written to `release/kaggle/` and is intentionally ignored by Git.
 
 ## Create privately first
 
-Do **not** add `--public` on the first upload:
+The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. A pre-upload search on 2026-09-09 found no existing dataset with that handle/title.
+
+Use the guarded upload wrapper. It verifies the release QA result, release manifest, and dataset ID before invoking Kaggle. The wrapper intentionally does **not** add `--public`, so the first upload is private.
+
+Git Bash:
+
+```bash
+bash ./run_kaggle_private_upload.sh --preflight-only
+bash ./run_kaggle_private_upload.sh
+```
+
+PowerShell:
+
+```powershell
+.\run_kaggle_private_upload.ps1 -PreflightOnly
+.\run_kaggle_private_upload.ps1
+```
+
+Equivalent raw CLI command:
 
 ```bash
 kaggle datasets create -p release/kaggle -t

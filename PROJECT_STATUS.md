@@ -84,6 +84,10 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - Stage 11 full rebuild completed and passed release QA: 22,351,430 strict HSK10 rows, 53 non-HSK10 source residual rows, 19 preserved negative-weight warning rows, 175 monthly partitions, 0 duplicate canonical keys, 0 partition mismatches, and `release_gate_pass=true` with 0 fatal sections.
 - Full derived outputs completed for HS8/HS6/HS4/HS2 with 175 monthly partitions each and residual-aware total reconciliation.
 - Stage 12 release tooling is being prepared to package one Parquet per analytical grain, a latest-month HS6 preview CSV, references/audits, a checksummed release manifest, complete Kaggle file/column metadata, provenance, cover image, and usage documentation.
+- Kaggle CLI is authenticated as `taeyangg4`. A pre-upload search found no existing `south-korea-customs-trade-hsk10` dataset, so the first publication action is a private `datasets create`, not a version update.
+- Guarded private-upload wrappers (`run_kaggle_private_upload.sh` / `.ps1`) now refuse upload unless release QA and the release manifest both pass and the metadata ID is exactly `taeyangg4/south-korea-customs-trade-hsk10`. They deliberately omit `--public`.
+- A release-folder secret/path scan found no `serviceKey`, `KCS_SERVICE_KEY`, `.env`, or local project absolute path strings in upload-facing text/CSV/JSON files.
+- Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. Release QA still passes and the full suite remains 42/42 tests passing. The only remaining long-running action before private UI review is the ~1.189 GB Kaggle upload itself.
 
 ## Pending live work
 
