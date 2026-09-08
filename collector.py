@@ -218,60 +218,66 @@ def main() -> int:
     started = datetime.now().astimezone()
     root_results = []
     stopped_reason = None
-    for i, (country, window) in enumerate(roots, 1):
-        checkpoint_reused = (not force) and root_checkpoint_available(data_dir, country, window)
-        attempt = 0
-        while True:
-            outcomes = pilot.collect_with_split(
-                session=session,
-                service_key=key,
-                country=country,
-                window=window,
-                data_dir=data_dir,
-                connect_timeout=args.connect_timeout,
-                read_timeout=args.read_timeout,
-                retries=args.retries,
-                force=force or attempt > 0,
-                adaptive_split=True,
-                verbose=False,
-            )
-            if contains_status(outcomes, "rate_limited") and attempt < args.rate_limit_retries:
-                attempt += 1
-                sleep_s = min(2 ** attempt, 30)
-                print(f"rate_limited {country}:{window.label}; retrying in {sleep_s}s", file=sys.stderr)
-                time.sleep(sleep_s)
-                continue
-            break
+    try:
+        for i, (country, window) in enumerate(roots, 1):
+            checkpoint_reused = (not force) and root_checkpoint_available(data_dir, country, window)
+            attempt = 0
+            while True:
+                outcomes = pilot.collect_with_split(
+                    session=session,
+                    service_key=key,
+                    country=country,
+                    window=window,
+                    data_dir=data_dir,
+                    connect_timeout=args.connect_timeout,
+                    read_timeout=args.read_timeout,
+                    retries=args.retries,
+                    force=force or attempt > 0,
+                    adaptive_split=True,
+                    verbose=False,
+                )
+                if contains_status(outcomes, "rate_limited") and attempt < args.rate_limit_retries:
+                    attempt += 1
+                    sleep_s = min(2 ** attempt, 30)
+                    print(f"rate_limited {country}:{window.label}; retrying in {sleep_s}s", file=sys.stderr)
+                    time.sleep(sleep_s)
+                    continue
+                break
 
-        result = root_collection_summary(country, window, outcomes, checkpoint_reused)
-        result["rate_limit_retries"] = attempt
-        root_results.append(result)
+            result = root_collection_summary(country, window, outcomes, checkpoint_reused)
+            result["rate_limit_retries"] = attempt
+            root_results.append(result)
 
-        if contains_status(outcomes, "quota_exceeded"):
-            stopped_reason = "daily_quota_exceeded"
-        elif contains_auth_failure(outcomes):
-            stopped_reason = "authentication_or_permission_failure"
-        elif contains_status(outcomes, "rate_limited"):
-            stopped_reason = "rate_limit_retries_exhausted"
+            if contains_status(outcomes, "quota_exceeded"):
+                stopped_reason = "daily_quota_exceeded"
+            elif contains_auth_failure(outcomes):
+                stopped_reason = "authentication_or_permission_failure"
+            elif contains_status(outcomes, "rate_limited"):
+                stopped_reason = "rate_limit_retries_exhausted"
 
-        if (
-            i == 1
-            or i % args.progress_every == 0
-            or i == len(roots)
-            or not result["collection_success"]
-        ):
-            print(
-                f"progress={i}/{len(roots)} root={country}:{window.label} "
-                f"success={result['collection_success']} rows={result['fact_row_count']} "
-                f"checkpoint={checkpoint_reused} non10={result['non_hs10_fact_rows']}",
-                flush=True,
-            )
+            if (
+                i == 1
+                or i % args.progress_every == 0
+                or i == len(roots)
+                or not result["collection_success"]
+            ):
+                print(
+                    f"progress={i}/{len(roots)} root={country}:{window.label} "
+                    f"success={result['collection_success']} rows={result['fact_row_count']} "
+                    f"checkpoint={checkpoint_reused} non10={result['non_hs10_fact_rows']}",
+                    flush=True,
+                )
 
-        if stopped_reason:
-            print(f"stopping_reason={stopped_reason}", file=sys.stderr)
-            break
-        if args.request_delay:
-            time.sleep(args.request_delay)
+            if stopped_reason:
+                print(f"stopping_reason={stopped_reason}", file=sys.stderr)
+                break
+            # Checkpoint reuse is a local disk operation and should not consume
+            # API pacing budget. This makes interrupted full runs resume quickly.
+            if args.request_delay and not checkpoint_reused:
+                time.sleep(args.request_delay)
+    except KeyboardInterrupt:
+        stopped_reason = "interrupted"
+        print("stopping_reason=interrupted; completed checkpoints are preserved", file=sys.stderr)
 
     finished = datetime.now().astimezone()
     successful_roots = [r for r in root_results if r["collection_success"]]
@@ -313,7 +319,7 @@ def main() -> int:
         f"failures={len(failed_roots)} stopped={stopped_reason or '-'}"
     )
     if stopped_reason:
-        return 3
+        return 130 if stopped_reason == "interrupted" else 3
     if failed_roots:
         return 2
     return 0
