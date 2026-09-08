@@ -121,7 +121,15 @@ def test_kaggle_metadata_defaults_to_private_and_valid_live_tags(tmp_path: Path)
 
     assert metadata["isPrivate"] is True
     assert metadata["expectedUpdateFrequency"] == "monthly"
-    assert metadata["keywords"] == ["economics", "tabular", "asia"]
+    assert metadata["keywords"] == [
+        "economics",
+        "business",
+        "international relations",
+        "time series analysis",
+        "government",
+        "tabular",
+        "asia",
+    ]
     assert metadata["userSpecifiedSources"].isascii()
 
 

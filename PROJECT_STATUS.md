@@ -4,7 +4,7 @@ Last updated: 2026-09-09
 
 ## Roadmap progress
 
-Current stage: **12/12 — Kaggle release package built; private upload/publication pending**
+Current stage: **12/12 — private Kaggle release validated; public publication pending explicit approval**
 
 Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleaning; preserve official source truth and prioritize analyst usability, documentation, reproducibility, and encoding-safe release files.
 
@@ -71,7 +71,7 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, combined Parquet output, duplicate-label audits, and adjacent-year revision-transition review.
 - Stage 10 full collection completed for 2012–2026. The combined official HSK reference contains 178,911 `(reference_year, hs10)` rows with 0 missing Korean names, 0 missing English names, 0 invalid HSK10 values, 0 duplicate annual keys, and 0 prefix mismatches.
 - Three same-code source label variants were observed: two compatible 2012 wording expansions and one 2022 revision-boundary conflict. The 2022 conflict was resolved automatically against the adjacent 2021/2023 annual editions; unresolved duplicate-label reviews: 0.
-- Full test suite currently passes: 42 tests after the Stage-12 release-builder tests.
+- Full test suite currently passes: 45 tests after the release-builder and starter-Notebook regression tests.
 - Stage 11 code now targets annual HSK revision linkage, HS8/HS6/HS4/HS2 residual-aware analyst aggregates, and an automated Korean-text/UTF-8 release gate. Canonical source facts are not dropped merely because an HSK10 is absent from the annual CLIP reference; such rows keep a null revision and are audited.
 - Stage 11 dry-run confirms complete source selection: 4,035 successful source manifests, 47,075/47,075 country-month assignments, 2012-01 through 2026-07, and 0 overlap assignments.
 - A real US x 2025 stage-11 normalization smoke produced 77,606 canonical rows, 0 fatal anomalies, exact USD/trade-balance agreement with the response summary, and only 740 kg of accepted cumulative row-level weight rounding across 77,606 facts. Two January 2025 HSK10 codes are absent from the 2025 CLIP annual edition but exist through the 2024 edition; they remain canonical with null `hs_revision` and are audited rather than reassigned by inference.
@@ -83,13 +83,16 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - SHA-256 verification re-read every checksummed release artifact and matched the release manifest for all 15 recorded files.
 - Stage 11 full rebuild completed and passed release QA: 22,351,430 strict HSK10 rows, 53 non-HSK10 source residual rows, 19 preserved negative-weight warning rows, 175 monthly partitions, 0 duplicate canonical keys, 0 partition mismatches, and `release_gate_pass=true` with 0 fatal sections.
 - Full derived outputs completed for HS8/HS6/HS4/HS2 with 175 monthly partitions each and residual-aware total reconciliation.
-- Stage 12 release tooling is being prepared to package one Parquet per analytical grain, a latest-month HS6 preview CSV, references/audits, a checksummed release manifest, complete Kaggle file/column metadata, provenance, cover image, and usage documentation.
-- Kaggle CLI is authenticated as `taeyangg4`. A pre-upload search found no existing `south-korea-customs-trade-hsk10` dataset, so the first publication action is a private `datasets create`, not a version update.
+- Stage 12 packaged one Parquet per analytical grain, a latest-month HS6 preview CSV, references/audits, a checksummed release manifest, Kaggle metadata, provenance, cover image, and usage documentation.
+- Kaggle CLI is authenticated as `taeyangg4`. The private Dataset now exists at `taeyangg4/south-korea-customs-trade-hsk10`; Dataset Version 2 is `Ready` and remains private.
 - Guarded private-upload wrappers (`run_kaggle_private_upload.sh` / `.ps1`) now refuse upload unless release QA and the release manifest both pass and the metadata ID is exactly `taeyangg4/south-korea-customs-trade-hsk10`. They deliberately omit `--public`.
 - A release-folder secret/path scan found no `serviceKey`, `KCS_SERVICE_KEY`, `.env`, or local project absolute path strings in upload-facing text/CSV/JSON files.
-- Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. Release QA still passes and the full suite remains 42/42 tests passing. The only remaining long-running action before private UI review is the ~1.189 GB Kaggle upload itself.
+- Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. The private upload completed successfully; Dataset Version 2 is `Ready`, has a cover image, monthly update frequency, and seven live-valid discovery tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, and `international relations`.
+- Current private Dataset Usability is **0.7647059 (7.65/10)**. The exact remaining scoring breakdown is not exposed by the current Kaggle SDK/API, so the project does not infer missing components from empty file/column metadata API fields.
+- The private starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart` has been pushed through Version 3 and completed successfully in Kaggle runtime. It auto-discovers the mounted Dataset under `/kaggle/input`, loads the recent HS6 slice with PyArrow predicate pushdown, and has no traceback or Korean glyph warning in the validated Version 3 run.
+- The Dataset and starter Notebook are both intentionally still private. The next release action is the explicit public transition, followed by verification of public visibility, Dataset `kernel_count`, and the resulting Usability score.
 
-## Pending live work
+## Live validation record
 
 The operating/traffic increase application has been approved and the project-local `.env` contains the active key. A live probe returns HTTP 200 / `resultCode=00`.
 
@@ -124,4 +127,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Stages 9, 10, and 11 are complete. Stage 12 packages the validated outputs for a private-first Kaggle upload, verifies the Kaggle usability checklist, and only then proceeds to public release.
+Stages 9, 10, and 11 are complete. Stage 12 has completed the private-first package/upload/runtime-validation path. Public Dataset + Notebook publication remains intentionally pending explicit approval, after which Usability and Notebook association will be rechecked rather than assumed.

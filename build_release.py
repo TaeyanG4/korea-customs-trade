@@ -393,10 +393,17 @@ def build_kaggle_metadata(output: Path, repo_root: Path) -> dict[str, Any]:
         "isPrivate": True,
         "licenses": [{"name": "other"}],
         "resources": resources,
-        # These three are confirmed valid Kaggle tags. Multi-word candidates
-        # such as "international trade" and "time series" were rejected by
-        # the live Kaggle API during the initial private create.
-        "keywords": ["economics", "tabular", "asia"],
+        # Use only tags confirmed valid by the live Kaggle API. Prefer a small
+        # set of high-signal discovery tags over rejected free-form phrases.
+        "keywords": [
+            "economics",
+            "business",
+            "international relations",
+            "time series analysis",
+            "government",
+            "tabular",
+            "asia",
+        ],
         "expectedUpdateFrequency": "monthly",
         "userSpecifiedSources": (
             "Korea Customs Service via the Korea Public Data Portal (data.go.kr) and the official KCS CLIP tariff tables. "

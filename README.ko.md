@@ -14,20 +14,22 @@
 
 ## 현재 단계
 
-API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집, release QA까지 완료했고 현재는 **Kaggle release packaging 단계**입니다. 최초 핵심 가정은 다음이었습니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집, release QA, private Kaggle Dataset 업로드, private starter Notebook의 Kaggle runtime 검증까지 완료했습니다. 현재는 **public release 결정 단계**입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
-첫 live test는 **US × 2025**입니다. 이후 pilot matrix는 다음과 같습니다.
+첫 live test는 **US × 2025**였고, 완료된 pilot matrix는 다음과 같습니다.
 
 - 국가: `US`, `CN`, `JP`, `VN`, `DE`
 - 연도: `2012`, `2017`, `2022`, `2025`
 
-이 pilot을 통과하기 전에는 full crawl을 진행하지 않습니다.
+이 gate를 통과한 뒤 full crawl을 진행했으며, 현재 historical backfill은 완료된 상태입니다.
 
 ### 로드맵 진행 상황
 
-현재 단계는 **12/12 — Kaggle release package**입니다. 1~11단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. Stage 11은 strict HSK10 22,351,430 rows와 non-HSK10 원천 예외 53 rows를 만들었고 canonical duplicate는 0, 최종 `release_gate_pass=true`입니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
+현재 단계는 **12/12 — private Kaggle release 검증 완료, public publication은 명시적 승인 대기**입니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. Stage 11은 strict HSK10 22,351,430 rows와 non-HSK10 원천 예외 53 rows를 만들었고 canonical duplicate는 0, 최종 `release_gate_pass=true`입니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
+
+Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10`은 현재 **Private**이며 Version 2가 `Ready`, 관측 Usability는 **7.65/10**입니다. Private starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`는 Version 3까지 Kaggle runtime에서 정상 완료됐고 Dataset mount auto-discovery, traceback 없음, 한글 glyph warning 없음까지 확인했습니다. Dataset과 Notebook은 명시적인 공개 결정 전까지 private을 유지하며, 공개 후에는 Notebook 연결/`kernel_count`와 최종 Usability를 실제로 재검증합니다.
 
 최종 제품 목표는 **Kaggle Usability 10.00 + Dataset medal**입니다. 원천 데이터를 과도하게 정제하지 않고, 공식성·재현성·분석 편의성·문서화·지속 업데이트·한글 무결성을 중심으로 완성도를 높입니다.
 
@@ -82,7 +84,7 @@ python .\collector.py --dry-run backfill
 
 2026-09-08 기준 기본 계획은 `201201–202607`, 공식 국가코드 269개, calendar-year window 15개, **4,035 root requests**입니다. 안정월은 관세청이 전월 자료를 매월 15일경 현행화한다는 특성을 고려해 15일 이전에는 전전월, 16일 이후에는 전월을 사용합니다.
 
-full backfill 명령은 준비됐지만 normalization이 검증되는 9단계 전에는 실행하지 않습니다.
+완료된 full backfill은 다음 명령으로 재현할 수 있습니다.
 
 ```powershell
 .\run_backfill.ps1

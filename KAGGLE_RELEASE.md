@@ -28,11 +28,21 @@ The output is written to `release/kaggle/` and is intentionally ignored by Git.
 - Source exception and negative-weight warning files are included.
 - No API key, `.env`, raw XML, local absolute source paths, or bulky internal audit manifests are included.
 
-## Create privately first
+## Private release status
 
-The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. A pre-upload search on 2026-09-09 found no existing dataset with that handle/title.
+The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-first release has been completed and validated.
 
-Use the guarded upload wrapper. It verifies the release QA result, release manifest, and dataset ID before invoking Kaggle. The wrapper intentionally does **not** add `--public`, so the first upload is private.
+- Dataset Version 2: `Ready`
+- Visibility: **Private**
+- Current Usability: **7.65/10** (`0.7647059`)
+- Update frequency: monthly
+- Cover image: present
+- Live-valid tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, `international relations`
+- Starter Notebook: `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`
+- Notebook Version 3: `COMPLETE` in Kaggle runtime
+- Notebook visibility: **Private**
+
+The guarded upload wrapper remains the reproducible path for future private version uploads. It verifies the release QA result, release manifest, and dataset ID before invoking Kaggle and deliberately does **not** add `--public`.
 
 Git Bash:
 
@@ -48,18 +58,27 @@ PowerShell:
 .\run_kaggle_private_upload.ps1
 ```
 
-Equivalent raw CLI command:
+The equivalent raw CLI command used for the **initial private creation** was:
 
 ```bash
 kaggle datasets create -p release/kaggle -t
 ```
 
-After upload, verify the Data page, descriptions, license/provenance, cover image, and Usability checklist in the Kaggle UI. Only then make the dataset public.
+Now that the Dataset exists, future data/metadata releases should use a Dataset version update rather than repeating `datasets create`.
+
+The private validation already confirmed the Dataset files, metadata, cover, provenance, monthly frequency, and starter Notebook runtime. Do not create another full Dataset version solely because Kaggle's files/metadata APIs report empty file descriptions or zero columns; the same API behavior was observed on public Usability-10 datasets.
 
 ## Usability / medal follow-up
 
-Kaggle's progression guidance recommends a complete 10.0 usability score and an example Notebook. After the dataset is published, create a concise starter Notebook using HS6 and link it from the dataset. Suggested first Notebook:
+The concise HS6 starter Notebook already exists and has been validated privately:
 
 **South Korea Trade in 5 Minutes — HS6 Quickstart**
 
-Then publish deeper notebooks such as semiconductor exports, partner concentration, and HSK10 supply-chain dependence.
+The remaining release sequence is:
+
+1. Make the Dataset public only after explicit approval.
+2. Make the already validated starter Notebook public and preserve its Dataset source association.
+3. Re-check Dataset public visibility, Notebook public visibility, Dataset `kernel_count`, and Usability after Kaggle propagation.
+4. If Usability remains below 10.0, investigate only the residual gap; do not repeat the ~1.189 GB upload without evidence that a new Dataset version is required.
+
+A public Notebook is strongly indicated by the sampled Usability-10 ecosystem, but it is not treated as a guaranteed score change. Final Usability must be verified after publication. Deeper follow-up notebooks can then cover semiconductor exports, partner concentration, and HSK10 supply-chain dependence.
