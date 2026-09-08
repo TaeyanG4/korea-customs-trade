@@ -14,7 +14,7 @@ The final dataset will preserve full Korean **10-digit HSK** detail and derive `
 
 ## Current phase
 
-The API pilot, country-reference validation, production collector, normalization pipeline, full historical backfill, and official annual HSK reference collection are complete. The project is now in **reconciliation and release QA**. The original central collection assumption was:
+The API pilot, country-reference validation, production collector, normalization pipeline, full historical backfill, official annual HSK reference collection, and release QA are complete. The project is now in **Kaggle release packaging**. The original central collection assumption was:
 
 > When `cntyCd` and a period are supplied but `hsSgn` is omitted, does the Korea Customs item-by-country API return the full monthly HSK10 trade rows for that country?
 
@@ -27,7 +27,7 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **11/12 — reconciliation and release QA**. Stages 1–10 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
+Current stage: **12/12 — Kaggle release package**. Stages 1–11 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. Stage 11 produced 22,351,430 strict HSK10 rows plus 53 preserved non-HSK10 source exceptions, with 0 duplicate canonical keys and `release_gate_pass=true`. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
 
 The final product target is **Kaggle Usability 10.00 plus a Dataset medal**. The project avoids over-cleaning official source data and instead emphasizes reproducibility, analyst-ready grains, documentation, updateability, and encoding-safe Korean text.
 
@@ -35,15 +35,23 @@ The matrix also exposed a small but important upstream data-quality exception: 5
 
 The official KCS lookup workbook currently yields **269 unique country codes**. All 269 were accepted by a live 2025-01 API validation; 236 had trade rows that month and 33 returned no trade rows. The all-code January census contained **128,207 fact rows**, all numeric HSK10. The full-history planning band is roughly **22–35 million rows** and the production root-request count is **4,035** (269 codes × 15 calendar-year windows) before adaptive splits.
 
-Stage 8 measured Parquet on 1,756,794 real canonical rows: HSK10 was **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, and HS2 **1.06 MB**. Stage 11 adds HS8 and residual-aware aggregate metadata, so the final release size may be somewhat larger than that early estimate; the completed rebuild will record actual sizes in the release manifest.
+The final Stage-11 partitioned outputs contain: HSK10 **22,351,430 rows / 441,335,631 bytes**, HS8 **20,576,865 / 353,521,769**, HS6 **16,059,132 / 257,080,829**, HS4 **7,234,105 / 124,721,647**, and HS2 **1,446,045 / 29,122,656**. All five levels span 175 monthly partitions from 2012-01 through 2026-07.
 
-Run the complete Stage 11 rebuild with:
+Stage 11 can be reproduced with:
 
 ```powershell
 .\run_stage11.ps1
 ```
 
 This requires full country-month coverage, links annual HSK revisions, builds HS8/HS6/HS4/HS2 residual-aware analyst tables, and runs Korean-text/UTF-8 release gates.
+
+Build the Kaggle-facing package with:
+
+```powershell
+.\run_build_release.ps1
+```
+
+Git Bash users can run `bash ./run_build_release.sh`. The release builder writes one consolidated Parquet per analytical grain, a latest-month HS6 CSV preview, reference/audit files, checksums, full Kaggle file/column metadata, provenance, and documentation under the Git-ignored `release/kaggle/` directory.
 
 Country-code authority policy:
 
@@ -196,6 +204,7 @@ data/
         mm=01/
           part-00000.parquet
   derived/
+    hs8/year=2025/mm=01/part-00000.parquet
     hs6/year=2025/mm=01/part-00000.parquet
     hs4/year=2025/mm=01/part-00000.parquet
     hs2/year=2025/mm=01/part-00000.parquet
@@ -238,6 +247,7 @@ A pilot `PASS` verifies observed API behavior for the tested request. It does **
 month
 country_code
 hs10
+hs8
 hs6
 hs4
 hs2
@@ -249,7 +259,7 @@ trade_balance_usd
 hs_revision
 ```
 
-`month` is stored as `YYYYMM`. `hs6`, `hs4`, and `hs2` are strict prefixes of `hs10`. `hs_revision` is intentionally nullable during stage 8/9 and will only be populated from official revision-aware HSK sources in stage 10; no revision is inferred from trade rows.
+`month` is stored as `YYYYMM`. `hs8`, `hs6`, `hs4`, and `hs2` are strict prefixes of `hs10`. `hs_revision` is populated only when the code exists in the matching official annual KCS CLIP edition; unmatched trade facts remain present with null revision and are audited rather than inferred.
 
 Normalization resolves overlapping raw requests by choosing the latest successful manifest independently for every `(country, month)`. This is important for monthly revision refreshes: an older row can disappear in a newer source and will then disappear from the rebuilt normalized dataset rather than surviving as a stale append-only record.
 

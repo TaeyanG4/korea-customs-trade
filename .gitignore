@@ -15,6 +15,7 @@ data/reference/*
 !data/reference/country_reference.csv
 !data/reference/source_manifest.json
 data/audits/
+release/
 
 # Local editor / OS noise.
 .idea/

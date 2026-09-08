@@ -300,7 +300,18 @@ def main() -> int:
             data_dir / "audits" / "normalization" / "normalization_anomalies.parquet"
         ),
     }
-    for name in ["README.md", "README.ko.md", "DATA_MODEL.md", "DATA_MODEL.ko.md", "PROJECT_STATUS.md"]:
+    for name in [
+        "README.md",
+        "README.ko.md",
+        "DATA_MODEL.md",
+        "DATA_MODEL.ko.md",
+        "PROJECT_STATUS.md",
+        "KAGGLE_DESCRIPTION.md",
+        "DATA_DICTIONARY.md",
+        "METHODOLOGY.md",
+        "SOURCES.md",
+        "KAGGLE_RELEASE.md",
+    ]:
         checks[f"text:{name}"] = check_utf8_text_file(repo_root / name)
 
     fatal_sections = [name for name, result in checks.items() if isinstance(result, dict) and not result.get("ok")]

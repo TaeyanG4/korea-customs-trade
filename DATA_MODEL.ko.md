@@ -213,7 +213,7 @@ m49
 
 제품 목표는 **Kaggle Usability 10.00과 Dataset medal 획득**입니다. 이를 위해 원천 데이터를 과도하게 정제하거나 보기 좋은 값으로 임의 수정하지 않습니다. 대신 재현 가능한 공식 출처, 명확한 grain, ready-to-use Parquet, 데이터 사전/방법론, 안정적인 업데이트, 품질 audit에 집중합니다.
 
-공개 대상의 한글 텍스트는 release blocker로 관리합니다. CSV/Markdown은 UTF-8 strict decode를 통과해야 하고, HSK/국가 한글명은 replacement character(`�`), NUL/제어문자, 디코딩 손상으로 한글이 사라진 행이 없어야 합니다. 원천 exception의 값은 손상되지 않은 한 원문 그대로 보존하며, 단순히 QA 점수를 맞추기 위해 품명을 임의 교정하지 않습니다.
+공개 대상의 한글 텍스트는 release blocker로 관리합니다. CSV/Markdown은 UTF-8 strict decode를 통과해야 하고, HSK/국가 한글명은 replacement character(`U+FFFD`), NUL/제어문자, 디코딩 손상으로 한글이 사라진 행이 없어야 합니다. 원천 exception의 값은 손상되지 않은 한 원문 그대로 보존하며, 단순히 QA 점수를 맞추기 위해 품명을 임의 교정하지 않습니다.
 
 - HS2: 빠른 거시 탐색
 - HS4: 산업 분석

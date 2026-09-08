@@ -14,7 +14,7 @@
 
 ## 현재 단계
 
-API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집까지 완료했고 현재는 **reconciliation 및 release QA 단계**입니다. 최초 핵심 가정은 다음이었습니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집, release QA까지 완료했고 현재는 **Kaggle release packaging 단계**입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
@@ -27,7 +27,7 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 ### 로드맵 진행 상황
 
-현재 단계는 **11/12 — reconciliation 및 release QA**입니다. 1~10단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
+현재 단계는 **12/12 — Kaggle release package**입니다. 1~11단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. Stage 11은 strict HSK10 22,351,430 rows와 non-HSK10 원천 예외 53 rows를 만들었고 canonical duplicate는 0, 최종 `release_gate_pass=true`입니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
 
 최종 제품 목표는 **Kaggle Usability 10.00 + Dataset medal**입니다. 원천 데이터를 과도하게 정제하지 않고, 공식성·재현성·분석 편의성·문서화·지속 업데이트·한글 무결성을 중심으로 완성도를 높입니다.
 
@@ -35,15 +35,23 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 공식 KCS 조회코드 workbook에서 **269개 고유 국가코드**를 확보했습니다. 269개 전부를 2025-01 API로 검증한 결과 모두 정상 `resultCode=00`이었고, 236개는 해당 월 거래 row가 있었으며 33개는 거래가 없었습니다. 269개 전체에서 **128,207 fact rows**가 관측됐고 모두 숫자형 HSK10이었습니다. full-history planning band는 약 **2,200만~3,500만 rows**, production root request는 **4,035회**입니다.
 
-8단계에서 실제 canonical 1,756,794 rows로 Parquet을 측정했습니다. HSK10 **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, HS2 **1.06 MB**였고 duplicate 0, partition mismatch 0, fatal normalization anomaly 0이었습니다. 11단계에서는 HS8과 residual-aware 집계 metadata가 추가되므로 최종 release 크기는 초기 추정보다 다소 커질 수 있으며, 실제 전체 rebuild 결과를 release manifest에 기록합니다.
+최종 Stage-11 partitioned output은 HSK10 **22,351,430 rows / 441,335,631 bytes**, HS8 **20,576,865 / 353,521,769**, HS6 **16,059,132 / 257,080,829**, HS4 **7,234,105 / 124,721,647**, HS2 **1,446,045 / 29,122,656**입니다. 다섯 level 모두 2012-01~2026-07의 175개 월 partition을 가집니다.
 
-Stage 11 전체 재빌드는 다음 명령으로 실행합니다.
+Stage 11 전체 재빌드는 다음 명령으로 재현할 수 있습니다.
 
 ```powershell
 .\run_stage11.ps1
 ```
 
 이 명령은 full country-month coverage를 요구하고, annual HSK revision 연결, HS8/HS6/HS4/HS2 residual-aware 집계, 한글/UTF-8 release gate까지 순차 실행합니다.
+
+Kaggle 업로드용 package는 다음 명령으로 만듭니다.
+
+```powershell
+.\run_build_release.ps1
+```
+
+Git Bash에서는 `bash ./run_build_release.sh`를 사용합니다. Builder는 grain별 단일 Parquet 5개, 최신월 HS6 CSV preview, reference/audit, checksum manifest, Kaggle file/column metadata, provenance와 문서를 Git에서 제외된 `release/kaggle/`에 생성합니다.
 
 국가코드 authority 정책은 다음과 같습니다.
 
@@ -186,6 +194,7 @@ data/
         mm=01/
           part-00000.parquet
   derived/
+    hs8/year=2025/mm=01/part-00000.parquet
     hs6/year=2025/mm=01/part-00000.parquet
     hs4/year=2025/mm=01/part-00000.parquet
     hs2/year=2025/mm=01/part-00000.parquet
@@ -234,6 +243,7 @@ Pilot `PASS`는 해당 요청에서 관찰된 API 동작을 검증하는 것입�
 month
 country_code
 hs10
+hs8
 hs6
 hs4
 hs2
@@ -245,7 +255,7 @@ trade_balance_usd
 hs_revision
 ```
 
-`month`는 `YYYYMM` 문자열입니다. `hs6`, `hs4`, `hs2`는 `hs10`의 strict prefix입니다. `hs_revision`은 10단계에서 공식 revision-aware HSK source로 채우기 전까지 nullable이며 trade row를 보고 임의 추정하지 않습니다.
+`month`는 `YYYYMM` 문자열입니다. `hs8`, `hs6`, `hs4`, `hs2`는 `hs10`의 strict prefix입니다. `hs_revision`은 동일 연도의 공식 KCS CLIP edition에 코드가 존재할 때만 채우며, 미매칭 trade fact는 삭제하거나 추정하지 않고 null revision과 audit를 유지합니다.
 
 Normalization은 raw 요청이 겹쳐도 `(country, month)`별로 가장 최근 성공 manifest를 1개만 선택합니다. 따라서 월간 revision refresh에서 과거 row가 삭제된 경우에도 append-only stale row가 남지 않고 전체 rebuild 시 정상적으로 사라집니다.
 
