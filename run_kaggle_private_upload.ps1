@@ -7,6 +7,8 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $releaseDir = Join-Path $root 'release\kaggle'
 $datasetId = 'taeyangg4/south-korea-customs-trade-hsk10'
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
 
 $qaPath = Join-Path $root 'data\audits\release_qa\release_qa.json'
 $metadataPath = Join-Path $releaseDir 'dataset-metadata.json'

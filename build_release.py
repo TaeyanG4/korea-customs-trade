@@ -334,7 +334,15 @@ def fields_for_schema(schema: pa.Schema, descriptions: dict[str, str]) -> list[d
 
 def fields_for_csv(path: Path, descriptions: dict[str, str]) -> list[dict[str, str]]:
     schema = pacsv.read_csv(path).schema
-    return fields_for_schema(schema, descriptions)
+    fields = fields_for_schema(schema, descriptions)
+    # CSV type inference can interpret code-like identifiers as integers even
+    # when their semantic type is text. Keep HS prefixes and YYYYMM as strings
+    # in Kaggle metadata so leading zeros are never presented as disposable.
+    code_like_strings = {"month", "hs2", "hs4", "hs6", "hs8", "hs10"}
+    for field in fields:
+        if field["name"] in code_like_strings:
+            field["type"] = "string"
+    return fields
 
 
 def resource_schema(path: Path) -> list[dict[str, str]] | None:
@@ -380,13 +388,20 @@ def build_kaggle_metadata(output: Path, repo_root: Path) -> dict[str, Any]:
         "subtitle": "Monthly trade by 269 partners and 10-digit Korean HSK products",
         "description": dataset_description(repo_root),
         "id": "taeyangg4/south-korea-customs-trade-hsk10",
+        # Keep metadata-only updates private by default. Kaggle CLI's metadata
+        # update path treats a missing isPrivate value as False.
+        "isPrivate": True,
         "licenses": [{"name": "other"}],
         "resources": resources,
-        "keywords": ["economics", "international trade", "time series", "tabular", "asia"],
+        # These three are confirmed valid Kaggle tags. Multi-word candidates
+        # such as "international trade" and "time series" were rejected by
+        # the live Kaggle API during the initial private create.
+        "keywords": ["economics", "tabular", "asia"],
         "expectedUpdateFrequency": "monthly",
         "userSpecifiedSources": (
             "Korea Customs Service via the Korea Public Data Portal (data.go.kr) and the official KCS CLIP tariff tables. "
-            "The source API is listed with 이용허락범위 제한 없음 (no restriction on scope of use). See SOURCES.md for provenance and caveats."
+            "The official public-data listing states that there is no restriction on the scope of use. "
+            "See SOURCES.md for provenance, reuse notes, and caveats."
         ),
         "image": "dataset-cover-image.jpg",
     }

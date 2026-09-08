@@ -4,6 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_DIR="$ROOT/release/kaggle"
 DATASET_ID="taeyangg4/south-korea-customs-trade-hsk10"
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
+
+if command -v cygpath >/dev/null 2>&1; then
+  KAGGLE_RELEASE_DIR="$(cygpath -w "$RELEASE_DIR")"
+else
+  KAGGLE_RELEASE_DIR="$RELEASE_DIR"
+fi
 
 python - "$ROOT" "$RELEASE_DIR" "$DATASET_ID" <<'PY'
 import json
@@ -47,7 +55,7 @@ if [[ "${1:-}" == "--preflight-only" ]]; then
 fi
 
 echo "[12/12] Creating Kaggle dataset privately (no --public flag)..."
-kaggle datasets create -p "$RELEASE_DIR" -t
+kaggle datasets create -p "$KAGGLE_RELEASE_DIR" -t
 
 echo "[12/12] Kaggle dataset create command finished. Current status:"
 kaggle datasets status "$DATASET_ID" --format json

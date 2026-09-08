@@ -108,3 +108,27 @@ def test_release_anomaly_table_filters_and_renames(tmp_path: Path):
     assert "country_code" in filtered.column_names
     assert "source_manifest" not in filtered.column_names
     assert filtered["raw_hs_code"].to_pylist() == ["761699"]
+
+
+def test_kaggle_metadata_defaults_to_private_and_valid_live_tags(tmp_path: Path):
+    repo = tmp_path / "repo"
+    release = repo / "release"
+    release.mkdir(parents=True)
+    (repo / "KAGGLE_DESCRIPTION.md").write_text("Dataset description", encoding="utf-8")
+    (release / "DATA_DICTIONARY.md").write_text("dictionary", encoding="utf-8")
+
+    metadata = build_release.build_kaggle_metadata(release, repo)
+
+    assert metadata["isPrivate"] is True
+    assert metadata["expectedUpdateFrequency"] == "monthly"
+    assert metadata["keywords"] == ["economics", "tabular", "asia"]
+    assert metadata["userSpecifiedSources"].isascii()
+
+
+def test_csv_hs_identifiers_are_described_as_strings(tmp_path: Path):
+    path = tmp_path / "sample.csv"
+    path.write_text("month,hs6,value\n202607,010121,1\n", encoding="utf-8")
+    fields = {field["name"]: field for field in build_release.fields_for_csv(path, {})}
+    assert fields["month"]["type"] == "string"
+    assert fields["hs6"]["type"] == "string"
+    assert fields["value"]["type"] == "integer"

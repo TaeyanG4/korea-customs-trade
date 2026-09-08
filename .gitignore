@@ -2,6 +2,7 @@
 __pycache__/
 .pytest_cache/
 .pytest_tmp/
+.kaggle_metadata_check/
 *.pyc
 .env
 .env.*
