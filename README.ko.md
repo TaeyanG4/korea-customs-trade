@@ -10,11 +10,11 @@
 
 `month × partner_country × HSK10`
 
-한국 HSK **10자리**를 원천 grain으로 보존하고, `hs6`, `hs4`, `hs2`는 HSK10 prefix에서 로컬 파생합니다. HS2/4/6을 API에서 별도로 중복 수집하지 않습니다.
+한국 HSK **10자리**를 원천 grain으로 보존하고, `hs8`, `hs6`, `hs4`, `hs2`는 HSK10 prefix에서 로컬 파생합니다. HS2/4/6/8을 API에서 별도로 중복 수집하지 않습니다.
 
 ## 현재 단계
 
-API pilot, 국가코드 검증, production collector, normalization pipeline까지 완료했고 현재는 **full historical backfill 단계**입니다. 최초 핵심 가정은 다음이었습니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill까지 완료했고 현재는 관세청 CLIP의 공식 연도별 관세율표로 **revision-aware HSK reference dimension**을 구축하는 단계입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
@@ -40,6 +40,19 @@ API pilot, 국가코드 검증, production collector, normalization pipeline까�
 - `country_code`, `country_name_ko`: 관세청 `관세청조회코드_v1.3.xlsx`
 - 영문명/M49/alpha3: UN Statistics Division M49의 alpha-2 정확 일치만 보강
 - 매칭되지 않는 KCS 코드는 영문명을 추정하지 않고 그대로 유지
+
+## Revision-aware HSK reference
+
+10단계의 역사 HSK 기준자료는 관세청 CLIP의 한국 연도별 관세율표를 사용합니다. CLIP은 프로젝트 대상기간의 연도별 한국 관세율표와 계층형 품목정보, 국문/영문 품명을 제공합니다.
+
+`hsk_reference.py`는 CLIP 원문 HTML을 연도/류별 gzip cache로 보존하고 resume하며, 정확한 숫자형 HSK10만 파싱해 연도별 및 통합 Parquet reference를 생성합니다.
+
+```powershell
+python .\hsk_reference.py probe --year 2022 --chapter 01
+.\run_hsk_reference.ps1
+```
+
+첫 live probe는 2022년 제1류에서 HSK10 69개를 추출했고 국문명/영문명 누락은 모두 0이었습니다. 전체 수집은 오래 걸릴 수 있으므로 사용자 직접 실행 작업으로 둡니다. `HSK-YYYY`는 CLIP의 **공식 연도판**을 의미하며, 연도 선택 화면에서 확인할 수 없는 연중 법적 개정 경계를 임의 추정하지 않습니다.
 
 ## Production collector
 

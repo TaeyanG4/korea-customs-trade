@@ -10,11 +10,11 @@ This repository builds a reproducible Kaggle data product from official Korea Cu
 
 `month × partner_country × HSK10`
 
-The final dataset will preserve full Korean **10-digit HSK** detail and derive `hs6`, `hs4`, and `hs2` locally from the HSK10 prefix instead of collecting those aggregation levels separately.
+The final dataset will preserve full Korean **10-digit HSK** detail and derive `hs8`, `hs6`, `hs4`, and `hs2` locally from the HSK10 prefix instead of collecting those aggregation levels separately.
 
 ## Current phase
 
-The API pilot, country-reference validation, production collector, and normalization pipeline are complete. The project is now in the **full historical backfill** phase. The original central collection assumption was:
+The API pilot, country-reference validation, production collector, normalization pipeline, and full historical backfill are complete. The project is now building the **revision-aware HSK reference dimension** from official Korea Customs Service CLIP annual tariff tables. The original central collection assumption was:
 
 > When `cntyCd` and a period are supplied but `hsSgn` is omitted, does the Korea Customs item-by-country API return the full monthly HSK10 trade rows for that country?
 
@@ -40,6 +40,19 @@ Country-code authority policy:
 - `country_code` and `country_name_ko`: Korea Customs Service `관세청조회코드_v1.3.xlsx`
 - English/M49/alpha3 enrichment: exact alpha-2 matches from UN Statistics Division M49 only
 - unmatched KCS codes are retained with blank English/UN fields; they are never dropped or guessed
+
+## Revision-aware HSK reference
+
+Stage 10 uses the official Korea Customs Service CLIP Korean tariff table as the historical HSK reference. The site exposes annual Korean tariff-table editions across the project period and returns the hierarchical tariff rows with Korean and English item names.
+
+The local reference builder caches raw CLIP HTML by year/chapter, resumes from cache, parses only exact numeric HSK10 rows, and writes annual + combined Parquet reference data:
+
+```powershell
+python .\hsk_reference.py probe --year 2022 --chapter 01
+.\run_hsk_reference.ps1
+```
+
+The first live probe parsed 69 HSK10 rows from 2022 chapter 01 with no missing Korean or English names. Full collection is intentionally a user-run long task. `HSK-YYYY` means the official CLIP **annual edition**; the project does not infer unsupported sub-annual legal amendment boundaries from the annual selector.
 
 ## Production collector
 

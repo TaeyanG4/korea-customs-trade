@@ -65,6 +65,10 @@ Current stage: **10/12 — revision-aware HSK dimension**
 - Current derived sample: HS6 1,091,103 rows / 21.84 MB; HS4 353,003 / 7.68 MB; HS2 39,934 / 1.06 MB.
 - Full historical backfill completed: 4,035/4,035 scheduled roots succeeded, 22,351,483 fact rows collected, 343 successful checkpoints reused, 0 unresolved failures.
 - Durable analyst-facing data model is documented in `DATA_MODEL.md` / `DATA_MODEL.ko.md`: separate HS2/HS4/HS6/HS8/HSK10 files, strict HSK10 canonical grain, non-HSK10 quarantine, and residual-aware upper-level aggregation without guessing.
+- Official revision-reference source selected: Korea Customs Service CLIP annual Korean tariff tables, available across the project period.
+- `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, and combined Parquet output.
+- Stage-10 live probe passed for 2022 chapter 01: 69 exact HSK10 rows, 0 missing Korean names, 0 missing English names. Probe output is isolated from complete annual output.
+- Full test suite currently passes: 30 tests.
 
 ## Pending live work
 
@@ -101,4 +105,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Stage 9 is complete. Next action: build the revision-aware HSK dimension from official historical HSK sources where available. After the dimension policy is established, rebuild normalization with `--require-full-coverage` so all **269 × 175 months = 47,075 country-month source assignments** are present, then regenerate analyst-facing HS2/HS4/HS6/HS8/HSK10 outputs under the residual policy in `DATA_MODEL.md`.
+Stage 9 is complete. Stage 10 source discovery, parser design, and one-chapter live validation are complete. The next long-running action is the full official CLIP HSK reference collection for 2012–2026 using `run_hsk_reference.ps1` (roughly one detail request per HS chapter per year, with gzip cache/resume). `HSK-YYYY` denotes the official CLIP annual edition and intentionally does not claim unsupported sub-annual legal validity boundaries. After the annual reference is complete and validated, proceed to stage 11 full normalization/reconciliation, including all **269 × 175 months = 47,075 country-month source assignments** and the residual policy in `DATA_MODEL.md`.
