@@ -1,0 +1,270 @@
+country_code,country_name_ko,country_name_en,un_m49,iso_alpha3,un_match_status,kcs_source_version,kcs_source_row
+AD,안도라,Andorra,020,AND,matched_current_un,1.3.,5
+AE,아랍에미리트 연합,United Arab Emirates,784,ARE,matched_current_un,1.3.,6
+AF,아프카니스탄,Afghanistan,004,AFG,matched_current_un,1.3.,7
+AG,안티가 바부다,Antigua and Barbuda,028,ATG,matched_current_un,1.3.,8
+AI,앙귈라,Anguilla,660,AIA,matched_current_un,1.3.,9
+AL,알바니아,Albania,008,ALB,matched_current_un,1.3.,10
+AM,아르메니아,Armenia,051,ARM,matched_current_un,1.3.,11
+AN,네덜란드 열도,,,,unmatched_kcs_code,1.3.,12
+AO,앙골라,Angola,024,AGO,matched_current_un,1.3.,13
+AQ,안타티카,Antarctica,010,ATA,matched_current_un,1.3.,14
+AR,아르헨티나,Argentina,032,ARG,matched_current_un,1.3.,15
+AS,아메리칸 사모아,American Samoa,016,ASM,matched_current_un,1.3.,16
+AT,오스트리아,Austria,040,AUT,matched_current_un,1.3.,17
+AU,호주,Australia,036,AUS,matched_current_un,1.3.,18
+AW,아루바,Aruba,533,ABW,matched_current_un,1.3.,19
+AX,알랜드 군도,Åland Islands,248,ALA,matched_current_un,1.3.,20
+AZ,아제르바이잔,Azerbaijan,031,AZE,matched_current_un,1.3.,21
+BA,보스니아-헤르체고비나,Bosnia and Herzegovina,070,BIH,matched_current_un,1.3.,22
+BB,바베이도스,Barbados,052,BRB,matched_current_un,1.3.,23
+BD,방글라데시,Bangladesh,050,BGD,matched_current_un,1.3.,24
+BE,벨기에,Belgium,056,BEL,matched_current_un,1.3.,25
+BF,부르키나 파소,Burkina Faso,854,BFA,matched_current_un,1.3.,26
+BG,불가리아,Bulgaria,100,BGR,matched_current_un,1.3.,27
+BH,바레인,Bahrain,048,BHR,matched_current_un,1.3.,28
+BI,부룬디,Burundi,108,BDI,matched_current_un,1.3.,29
+BJ,베닝,Benin,204,BEN,matched_current_un,1.3.,30
+BL,세인트 바르탤르미,Saint Barthélemy,652,BLM,matched_current_un,1.3.,31
+BM,버뮤다,Bermuda,060,BMU,matched_current_un,1.3.,32
+BN,브루나이,Brunei Darussalam,096,BRN,matched_current_un,1.3.,33
+BO,볼리비아,Bolivia (Plurinational State of),068,BOL,matched_current_un,1.3.,34
+BQ,보네르 신트외스타티위스,"Bonaire, Sint Eustatius and Saba",535,BES,matched_current_un,1.3.,35
+BR,브라질,Brazil,076,BRA,matched_current_un,1.3.,36
+BS,바하마,Bahamas,044,BHS,matched_current_un,1.3.,37
+BT,부탄,Bhutan,064,BTN,matched_current_un,1.3.,38
+BV,보빗군도,Bouvet Island,074,BVT,matched_current_un,1.3.,39
+BW,보츠와나,Botswana,072,BWA,matched_current_un,1.3.,40
+BY,벨라루스,Belarus,112,BLR,matched_current_un,1.3.,41
+BZ,벨리제,Belize,084,BLZ,matched_current_un,1.3.,42
+CA,캐나다,Canada,124,CAN,matched_current_un,1.3.,43
+CC,코스 군도,Cocos (Keeling) Islands,166,CCK,matched_current_un,1.3.,44
+CD,콩고민주공화국,Democratic Republic of the Congo,180,COD,matched_current_un,1.3.,45
+CF,중앙아프리카공화국,Central African Republic,140,CAF,matched_current_un,1.3.,46
+CG,콩고,Congo,178,COG,matched_current_un,1.3.,47
+CH,스위스,Switzerland,756,CHE,matched_current_un,1.3.,48
+CI,코트디봐르,Côte d’Ivoire,384,CIV,matched_current_un,1.3.,49
+CK,쿡 아일랜드,Cook Islands,184,COK,matched_current_un,1.3.,50
+CL,칠레,Chile,152,CHL,matched_current_un,1.3.,51
+CM,카메룬,Cameroon,120,CMR,matched_current_un,1.3.,52
+CN,중국,China,156,CHN,matched_current_un,1.3.,53
+CO,콜롬비아,Colombia,170,COL,matched_current_un,1.3.,54
+CR,코스타리카,Costa Rica,188,CRI,matched_current_un,1.3.,55
+CS,세르비아 와 몬테네그로,,,,unmatched_kcs_code,1.3.,56
+CT,캔톤아일랜드,,,,unmatched_kcs_code,1.3.,57
+CU,쿠바,Cuba,192,CUB,matched_current_un,1.3.,58
+CV,카보 베르데,Cabo Verde,132,CPV,matched_current_un,1.3.,59
+CW,큐라소,Curaçao,531,CUW,matched_current_un,1.3.,60
+CX,크리스마스 아일랜드,Christmas Island,162,CXR,matched_current_un,1.3.,61
+CY,사이프러스,Cyprus,196,CYP,matched_current_un,1.3.,62
+CZ,체코공화국,Czechia,203,CZE,matched_current_un,1.3.,63
+DE,독일,Germany,276,DEU,matched_current_un,1.3.,64
+DJ,지부티,Djibouti,262,DJI,matched_current_un,1.3.,65
+DK,덴마크,Denmark,208,DNK,matched_current_un,1.3.,66
+DM,도미니카,Dominica,212,DMA,matched_current_un,1.3.,67
+DO,도미니카 공화국,Dominican Republic,214,DOM,matched_current_un,1.3.,68
+DZ,알제리,Algeria,012,DZA,matched_current_un,1.3.,69
+EC,에쿠아도르,Ecuador,218,ECU,matched_current_un,1.3.,70
+EE,에스토니아,Estonia,233,EST,matched_current_un,1.3.,71
+EG,이집트,Egypt,818,EGY,matched_current_un,1.3.,72
+EH,서사하라,Western Sahara,732,ESH,matched_current_un,1.3.,73
+ER,에리트리아,Eritrea,232,ERI,matched_current_un,1.3.,74
+ES,스페인,Spain,724,ESP,matched_current_un,1.3.,75
+ET,에티오피아,Ethiopia,231,ETH,matched_current_un,1.3.,76
+EU,유럽연합,,,,unmatched_kcs_code,1.3.,77
+FI,핀란드,Finland,246,FIN,matched_current_un,1.3.,78
+FJ,피지,Fiji,242,FJI,matched_current_un,1.3.,79
+FK,포클랜드 군도,Falkland Islands (Malvinas),238,FLK,matched_current_un,1.3.,80
+FM,마이크로네시아,Micronesia (Federated States of),583,FSM,matched_current_un,1.3.,81
+FO,파로에 군도,Faroe Islands,234,FRO,matched_current_un,1.3.,82
+FR,프랑스,France,250,FRA,matched_current_un,1.3.,83
+FX,프랑스 메트로폴리탄,,,,unmatched_kcs_code,1.3.,84
+GA,가봉,Gabon,266,GAB,matched_current_un,1.3.,85
+GB,영국,United Kingdom of Great Britain and Northern Ireland,826,GBR,matched_current_un,1.3.,86
+GD,그레나다,Grenada,308,GRD,matched_current_un,1.3.,87
+GE,조지아,Georgia,268,GEO,matched_current_un,1.3.,88
+GF,불령 가이아나,French Guiana,254,GUF,matched_current_un,1.3.,89
+GG,건지,Guernsey,831,GGY,matched_current_un,1.3.,90
+GH,가나,Ghana,288,GHA,matched_current_un,1.3.,91
+GI,지브랄타,Gibraltar,292,GIB,matched_current_un,1.3.,92
+GL,그린랜드,Greenland,304,GRL,matched_current_un,1.3.,93
+GM,감비아,Gambia,270,GMB,matched_current_un,1.3.,94
+GN,기니,Guinea,324,GIN,matched_current_un,1.3.,95
+GP,과델로프,Guadeloupe,312,GLP,matched_current_un,1.3.,96
+GQ,적도 기니,Equatorial Guinea,226,GNQ,matched_current_un,1.3.,97
+GR,그리스,Greece,300,GRC,matched_current_un,1.3.,98
+GS,남조지아 & 남샌드위치 군도,South Georgia and the South Sandwich Islands,239,SGS,matched_current_un,1.3.,99
+GT,과테말라,Guatemala,320,GTM,matched_current_un,1.3.,100
+GU,괌,Guam,316,GUM,matched_current_un,1.3.,101
+GW,기네비소,Guinea-Bissau,624,GNB,matched_current_un,1.3.,102
+GY,가이아나,Guyana,328,GUY,matched_current_un,1.3.,103
+HK,홍콩,"China, Hong Kong Special Administrative Region",344,HKG,matched_current_un,1.3.,104
+HM,허드 앤 맥도날드 군도,Heard Island and McDonald Islands,334,HMD,matched_current_un,1.3.,105
+HN,온두라스,Honduras,340,HND,matched_current_un,1.3.,106
+HR,크로아티아,Croatia,191,HRV,matched_current_un,1.3.,107
+HT,아이티,Haiti,332,HTI,matched_current_un,1.3.,108
+HU,헝가리,Hungary,348,HUN,matched_current_un,1.3.,109
+ID,인도네시아,Indonesia,360,IDN,matched_current_un,1.3.,110
+IE,아일랜드,Ireland,372,IRL,matched_current_un,1.3.,111
+IL,이스라엘,Israel,376,ISR,matched_current_un,1.3.,112
+IM,맨섬,Isle of Man,833,IMN,matched_current_un,1.3.,113
+IN,인도,India,356,IND,matched_current_un,1.3.,114
+IO,영령 인도양,British Indian Ocean Territory,086,IOT,matched_current_un,1.3.,115
+IQ,이라크,Iraq,368,IRQ,matched_current_un,1.3.,116
+IR,이란,Iran (Islamic Republic of),364,IRN,matched_current_un,1.3.,117
+IS,아이슬란드,Iceland,352,ISL,matched_current_un,1.3.,118
+IT,이탈리아,Italy,380,ITA,matched_current_un,1.3.,119
+JE,저어지,Jersey,832,JEY,matched_current_un,1.3.,120
+JM,자마이카,Jamaica,388,JAM,matched_current_un,1.3.,121
+JO,요르단,Jordan,400,JOR,matched_current_un,1.3.,122
+JP,일본,Japan,392,JPN,matched_current_un,1.3.,123
+JT,존스톤 아일랜드,,,,unmatched_kcs_code,1.3.,124
+KE,케냐,Kenya,404,KEN,matched_current_un,1.3.,125
+KG,키르기스스탄,Kyrgyzstan,417,KGZ,matched_current_un,1.3.,126
+KH,캄보디아,Cambodia,116,KHM,matched_current_un,1.3.,127
+KI,키리바티,Kiribati,296,KIR,matched_current_un,1.3.,128
+KM,코모로스,Comoros,174,COM,matched_current_un,1.3.,129
+KN,세인트 키츠 네비스,Saint Kitts and Nevis,659,KNA,matched_current_un,1.3.,130
+KP,북한,Democratic People's Republic of Korea,408,PRK,matched_current_un,1.3.,131
+KR,한국,Republic of Korea,410,KOR,matched_current_un,1.3.,132
+KW,쿠웨이트,Kuwait,414,KWT,matched_current_un,1.3.,133
+KY,영령 캐이맨 군도,Cayman Islands,136,CYM,matched_current_un,1.3.,134
+KZ,카자흐스탄,Kazakhstan,398,KAZ,matched_current_un,1.3.,135
+LA,라오스,Lao People's Democratic Republic,418,LAO,matched_current_un,1.3.,136
+LB,레바논,Lebanon,422,LBN,matched_current_un,1.3.,137
+LC,세인트 루시아,Saint Lucia,662,LCA,matched_current_un,1.3.,138
+LI,리히텐슈타인,Liechtenstein,438,LIE,matched_current_un,1.3.,139
+LK,스리랑카,Sri Lanka,144,LKA,matched_current_un,1.3.,140
+LR,라이베리아,Liberia,430,LBR,matched_current_un,1.3.,141
+LS,레소토,Lesotho,426,LSO,matched_current_un,1.3.,142
+LT,리투아니아,Lithuania,440,LTU,matched_current_un,1.3.,143
+LU,룩셈부르그,Luxembourg,442,LUX,matched_current_un,1.3.,144
+LV,라트비아,Latvia,428,LVA,matched_current_un,1.3.,145
+LY,리비아,Libya,434,LBY,matched_current_un,1.3.,146
+MA,모로코,Morocco,504,MAR,matched_current_un,1.3.,147
+MC,모나코,Monaco,492,MCO,matched_current_un,1.3.,148
+MD,몰도바,Republic of Moldova,498,MDA,matched_current_un,1.3.,149
+ME,몬테네그로,Montenegro,499,MNE,matched_current_un,1.3.,150
+MF,세인트 마틴,Saint Martin (French Part),663,MAF,matched_current_un,1.3.,151
+MG,마다카스카르,Madagascar,450,MDG,matched_current_un,1.3.,152
+MH,마샬군도,Marshall Islands,584,MHL,matched_current_un,1.3.,153
+MI,미드웨이 군도,,,,unmatched_kcs_code,1.3.,154
+MK,마세도니아,North Macedonia,807,MKD,matched_current_un,1.3.,155
+ML,말리,Mali,466,MLI,matched_current_un,1.3.,156
+MM,미얀마,Myanmar,104,MMR,matched_current_un,1.3.,157
+MN,몽골,Mongolia,496,MNG,matched_current_un,1.3.,158
+MO,마카오,"China, Macao Special Administrative Region",446,MAC,matched_current_un,1.3.,159
+MP,북마리아나 군도,Northern Mariana Islands,580,MNP,matched_current_un,1.3.,160
+MQ,마티니크,Martinique,474,MTQ,matched_current_un,1.3.,161
+MR,모리타니,Mauritania,478,MRT,matched_current_un,1.3.,162
+MS,몬트세라트,Montserrat,500,MSR,matched_current_un,1.3.,163
+MT,몰타,Malta,470,MLT,matched_current_un,1.3.,164
+MU,모리셔스,Mauritius,480,MUS,matched_current_un,1.3.,165
+MV,몰디브,Maldives,462,MDV,matched_current_un,1.3.,166
+MW,말라위,Malawi,454,MWI,matched_current_un,1.3.,167
+MX,멕시코,Mexico,484,MEX,matched_current_un,1.3.,168
+MY,말레이시아,Malaysia,458,MYS,matched_current_un,1.3.,169
+MZ,모잠비크,Mozambique,508,MOZ,matched_current_un,1.3.,170
+NA,나미비아,Namibia,516,NAM,matched_current_un,1.3.,171
+NC,뉴 칼레도니아,New Caledonia,540,NCL,matched_current_un,1.3.,172
+NE,니제르,Niger,562,NER,matched_current_un,1.3.,173
+NF,노폴크 아일랜드,Norfolk Island,574,NFK,matched_current_un,1.3.,174
+NG,나이지리아,Nigeria,566,NGA,matched_current_un,1.3.,175
+NI,니카라과,Nicaragua,558,NIC,matched_current_un,1.3.,176
+NL,네덜란드,Netherlands (Kingdom of the),528,NLD,matched_current_un,1.3.,177
+NO,노르웨이,Norway,578,NOR,matched_current_un,1.3.,178
+NP,네팔,Nepal,524,NPL,matched_current_un,1.3.,179
+NQ,드롬힝 마우드랜드,,,,unmatched_kcs_code,1.3.,180
+NR,나우루,Naoero,520,NRU,matched_current_un,1.3.,181
+NT,중립지대,,,,unmatched_kcs_code,1.3.,182
+NU,니우에,Niue,570,NIU,matched_current_un,1.3.,183
+NZ,뉴질랜드,New Zealand,554,NZL,matched_current_un,1.3.,184
+OM,오만,Oman,512,OMN,matched_current_un,1.3.,185
+PA,파나마,Panama,591,PAN,matched_current_un,1.3.,186
+PE,페루,Peru,604,PER,matched_current_un,1.3.,187
+PF,불령 폴리네시아,French Polynesia,258,PYF,matched_current_un,1.3.,188
+PG,파푸아 뉴기니,Papua New Guinea,598,PNG,matched_current_un,1.3.,189
+PH,필리핀,Philippines,608,PHL,matched_current_un,1.3.,190
+PK,파키스탄,Pakistan,586,PAK,matched_current_un,1.3.,191
+PL,폴란드,Poland,616,POL,matched_current_un,1.3.,192
+PM,세인트 피레 미켈론,Saint Pierre and Miquelon,666,SPM,matched_current_un,1.3.,193
+PN,피트카이른,Pitcairn,612,PCN,matched_current_un,1.3.,194
+PO,팔레스타인 해방기구(구),,,,unmatched_kcs_code,1.3.,195
+PR,푸에르토리코,Puerto Rico,630,PRI,matched_current_un,1.3.,196
+PS,팔레스타인 해방기구,State of Palestine,275,PSE,matched_current_un,1.3.,197
+PT,포루투갈,Portugal,620,PRT,matched_current_un,1.3.,198
+PW,팔라우,Palau,585,PLW,matched_current_un,1.3.,199
+PY,파라과이,Paraguay,600,PRY,matched_current_un,1.3.,200
+PZ,파나마운하지역,,,,unmatched_kcs_code,1.3.,201
+QA,카타르,Qatar,634,QAT,matched_current_un,1.3.,202
+RA,교포,,,,unmatched_kcs_code,1.3.,203
+RE,불령 리유니온 코모도 제도,Réunion,638,REU,matched_current_un,1.3.,204
+RK,해외교포,,,,unmatched_kcs_code,1.3.,205
+RO,루마니아,Romania,642,ROU,matched_current_un,1.3.,206
+RS,세르비아,Serbia,688,SRB,matched_current_un,1.3.,207
+RU,러시아 연방,Russian Federation,643,RUS,matched_current_un,1.3.,208
+RW,르완다,Rwanda,646,RWA,matched_current_un,1.3.,209
+SA,사우디아라비아,Saudi Arabia,682,SAU,matched_current_un,1.3.,210
+SB,솔로몬 군도,Solomon Islands,090,SLB,matched_current_un,1.3.,211
+SC,세이쉘,Seychelles,690,SYC,matched_current_un,1.3.,212
+SD,수단,Sudan,729,SDN,matched_current_un,1.3.,213
+SE,스웨덴,Sweden,752,SWE,matched_current_un,1.3.,214
+SG,싱가포르,Singapore,702,SGP,matched_current_un,1.3.,215
+SH,세인트 헬레나,Saint Helena,654,SHN,matched_current_un,1.3.,216
+SI,슬로베니아,Slovenia,705,SVN,matched_current_un,1.3.,217
+SJ,스발비드 군도,Svalbard and Jan Mayen Islands,744,SJM,matched_current_un,1.3.,218
+SK,슬로바키아,Slovakia,703,SVK,matched_current_un,1.3.,219
+SL,시에라 리온,Sierra Leone,694,SLE,matched_current_un,1.3.,220
+SM,산마리노,San Marino,674,SMR,matched_current_un,1.3.,221
+SN,세네갈,Senegal,686,SEN,matched_current_un,1.3.,222
+SO,소말리아,Somalia,706,SOM,matched_current_un,1.3.,223
+SR,수리남,Suriname,740,SUR,matched_current_un,1.3.,224
+SS,남수단,South Sudan,728,SSD,matched_current_un,1.3.,225
+ST,상토메 프린스페,Sao Tome and Principe,678,STP,matched_current_un,1.3.,226
+SV,엘살바도르,El Salvador,222,SLV,matched_current_un,1.3.,227
+SX,세인트마틴(생마르탱),Sint Maarten (Dutch part),534,SXM,matched_current_un,1.3.,228
+SY,시리아,Syrian Arab Republic,760,SYR,matched_current_un,1.3.,229
+SZ,스와질랜드,Eswatini,748,SWZ,matched_current_un,1.3.,230
+TC,투르크 & 카이코스 군도,Turks and Caicos Islands,796,TCA,matched_current_un,1.3.,231
+TD,챠드,Chad,148,TCD,matched_current_un,1.3.,232
+TF,불령 남부지역,French Southern Territories,260,ATF,matched_current_un,1.3.,233
+TG,토고,Togo,768,TGO,matched_current_un,1.3.,234
+TH,태국,Thailand,764,THA,matched_current_un,1.3.,235
+TJ,타지크,Tajikistan,762,TJK,matched_current_un,1.3.,236
+TK,토켈라우,Tokelau,772,TKL,matched_current_un,1.3.,237
+TL,티모르,Timor-Leste,626,TLS,matched_current_un,1.3.,238
+TM,투르크멘,Turkmenistan,795,TKM,matched_current_un,1.3.,239
+TN,튀니지,Tunisia,788,TUN,matched_current_un,1.3.,240
+TO,통가,Tonga,776,TON,matched_current_un,1.3.,241
+TP,티모르(구),,,,unmatched_kcs_code,1.3.,242
+TR,튀르키예,Türkiye,792,TUR,matched_current_un,1.3.,243
+TT,트리니다드 토바고,Trinidad and Tobago,780,TTO,matched_current_un,1.3.,244
+TV,투발루,Tuvalu,798,TUV,matched_current_un,1.3.,245
+TW,대만,,,,unmatched_kcs_code,1.3.,246
+TZ,탄자니아,United Republic of Tanzania,834,TZA,matched_current_un,1.3.,247
+UA,우크라이나,Ukraine,804,UKR,matched_current_un,1.3.,248
+UG,우간다,Uganda,800,UGA,matched_current_un,1.3.,249
+UM,마이너 아우틀링 합중국 군도,United States Minor Outlying Islands,581,UMI,matched_current_un,1.3.,250
+US,미국,United States of America,840,USA,matched_current_un,1.3.,251
+UY,우루과이,Uruguay,858,URY,matched_current_un,1.3.,252
+UZ,우즈베키스탄,Uzbekistan,860,UZB,matched_current_un,1.3.,253
+VA,교황청,Holy See,336,VAT,matched_current_un,1.3.,254
+VC,세인트 빈센트 그레나딘,Saint Vincent and the Grenadines,670,VCT,matched_current_un,1.3.,255
+VE,베네주엘라,Venezuela (Bolivarian Republic of),862,VEN,matched_current_un,1.3.,256
+VG,영령 버진군도,British Virgin Islands,092,VGB,matched_current_un,1.3.,257
+VI,미령 버진군도,United States Virgin Islands,850,VIR,matched_current_un,1.3.,258
+VN,베트남,Viet Nam,704,VNM,matched_current_un,1.3.,259
+VU,바누아투,Vanuatu,548,VUT,matched_current_un,1.3.,260
+WF,왈라스 & 퓨투나 군도,Wallis and Futuna Islands,876,WLF,matched_current_un,1.3.,261
+WK,웨이크 아일랜드,,,,unmatched_kcs_code,1.3.,262
+WS,사모아,Samoa,882,WSM,matched_current_un,1.3.,263
+YE,예맨,Yemen,887,YEM,matched_current_un,1.3.,264
+YM,마세도니아(구),,,,unmatched_kcs_code,1.3.,265
+YT,메요트,Mayotte,175,MYT,matched_current_un,1.3.,266
+YU,유고,,,,unmatched_kcs_code,1.3.,267
+Z1,국제통화기금,,,,unmatched_kcs_code,1.3.,268
+ZA,남아프리카공화국,South Africa,710,ZAF,matched_current_un,1.3.,269
+ZM,잠비아,Zambia,894,ZMB,matched_current_un,1.3.,270
+ZR,자이르,,,,unmatched_kcs_code,1.3.,271
+ZW,짐바브웨,Zimbabwe,716,ZWE,matched_current_un,1.3.,272
+ZZ,기타국,,,,unmatched_kcs_code,1.3.,273

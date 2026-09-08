@@ -57,6 +57,36 @@ def test_detects_duplicate_and_bad_hs(tmp_path: Path):
     assert m["non_hs10_fact_rows"] == 1
 
 
+def test_non_hs10_rows_are_quarantined_without_padding(tmp_path: Path):
+    xml = SAMPLE_XML.replace(
+        b"</items>",
+        b"<item><year>2025.02</year><statCd>US</statCd><hsCd>761699</hsCd><statKor>other</statKor><expDlr>172</expDlr><expWgt>1</expWgt><impDlr>0</impDlr><impWgt>0</impWgt><balPayments>172</balPayments></item>"
+        b"</items>",
+    )
+    raw = tmp_path / "raw.xml.gz"
+    with gzip.open(raw, "wb") as f:
+        f.write(xml)
+    outcome = pilot.RequestOutcome(
+        country="US",
+        window_start="202501",
+        window_end="202502",
+        split_level="quarter",
+        success=True,
+        status="success",
+        raw_path=str(raw),
+    )
+    path, count, export_usd, import_usd, lengths = pilot.write_non_hs10_audit(
+        tmp_path, [outcome]
+    )
+    text = path.read_text(encoding="utf-8")
+    assert count == 1
+    assert export_usd == 172
+    assert import_usd == 0
+    assert lengths == {"6": 1}
+    assert "761699" in text
+    assert "7616990000" not in text
+
+
 def test_parses_data_go_kr_gateway_quota_error(tmp_path: Path):
     p = tmp_path / "quota.xml.gz"
     with gzip.open(p, "wb") as f:

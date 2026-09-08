@@ -11,7 +11,9 @@ __pycache__/
 data/raw/
 data/normalized/
 data/derived/
-data/reference/
+data/reference/*
+!data/reference/country_reference.csv
+!data/reference/source_manifest.json
 data/audits/
 
 # Local editor / OS noise.

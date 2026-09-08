@@ -25,7 +25,17 @@
 
 ### 로드맵 진행 상황
 
-현재 단계는 **1/12 — 프로젝트 상태 및 문서 최신화**입니다. 증설 승인 후 변경된 서비스키로 실제 호출을 확인했으며 HTTP 200 / `resultCode=00` 정상 응답까지 검증했습니다. 다음 단계는 `hsSgn`을 생략한 **US × 2025 전체 연도 pilot**입니다.
+현재 단계는 **7/12 — production collector 설계/구현**입니다. 1~6단계는 완료했습니다. `hsSgn`을 생략한 **US × 2025 전체 연도 요청**은 clean PASS했고, 대표 **5개국 × 4개 연도** matrix도 20/20 country-year가 연간 1회 요청으로 성공했습니다. retry와 adaptive split은 모두 0회였습니다.
+
+다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
+
+공식 KCS 조회코드 workbook에서 **269개 고유 국가코드**를 확보했습니다. 269개 전부를 2025-01 API로 검증한 결과 모두 정상 `resultCode=00`이었고, 236개는 해당 월 거래 row가 있었으며 33개는 거래가 없었습니다. 269개 전체에서 **128,207 fact rows**가 관측됐고 모두 숫자형 HSK10이었습니다. 따라서 대형국 표본에 치우쳤던 이전 추정을 폐기하고 full-history planning band를 약 **2,200만~3,500만 rows**로 재조정합니다. production root request는 **269 × 15년 = 4,035회**이며 adaptive split 발생 전 기준입니다. Parquet 크기는 8단계에서 실제 생성 후 측정합니다.
+
+국가코드 authority 정책은 다음과 같습니다.
+
+- `country_code`, `country_name_ko`: 관세청 `관세청조회코드_v1.3.xlsx`
+- 영문명/M49/alpha3: UN Statistics Division M49의 alpha-2 정확 일치만 보강
+- 매칭되지 않는 KCS 코드는 영문명을 추정하지 않고 그대로 유지
 
 ## 공식 API
 

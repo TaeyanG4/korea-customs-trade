@@ -25,7 +25,17 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **1/12 — project status and documentation refresh**. The approved/updated service key has been verified with a live HTTP 200 / `resultCode=00` probe. The next stage is the full **US × 2025** pilot with `hsSgn` omitted.
+Current stage: **7/12 — production collector**. Stages 1–6 are complete. The full **US × 2025** annual request passed cleanly, and the representative **5 countries × 4 years** matrix completed 20/20 annual requests with zero retries and zero adaptive splits.
+
+The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
+
+The official KCS lookup workbook currently yields **269 unique country codes**. All 269 were accepted by a live 2025-01 API validation; 236 had trade rows that month and 33 returned no trade rows. The all-code January census contained **128,207 fact rows**, all numeric HSK10. This resets the full-history planning band to roughly **22–35 million rows** rather than the earlier major-country-biased estimate. The production root-request count is **4,035** (269 codes × 15 calendar years) before adaptive splits. Parquet size will be measured in stage 8 rather than guessed.
+
+Country-code authority policy:
+
+- `country_code` and `country_name_ko`: Korea Customs Service `관세청조회코드_v1.3.xlsx`
+- English/M49/alpha3 enrichment: exact alpha-2 matches from UN Statistics Division M49 only
+- unmatched KCS codes are retained with blank English/UN fields; they are never dropped or guessed
 
 ## Official API
 

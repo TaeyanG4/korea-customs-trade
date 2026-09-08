@@ -797,11 +797,86 @@ def write_hs_name_audit(
     return inventory_path, changes_path, variant_count
 
 
+def iter_non_hs10_observations(path: Path, requested_country: str):
+    """Yield raw trade rows that have a valid month but are not numeric HSK10.
+
+    These rows are preserved exactly as returned by the API. They must never be
+    zero-padded or otherwise coerced into HSK10 because the pilot has observed
+    shorter codes alongside distinct 10-digit child codes in the same month.
+    """
+    with gzip.open(path, "rb") as fh:
+        for _, elem in ET.iterparse(fh, events=("end",)):
+            if strip_ns(elem.tag) != "item":
+                continue
+            ym = parse_year_month(safe_text(elem, "year"))
+            hs = safe_text(elem, "hsCd")
+            if ym is not None and hs not in {"", "-"} and not DIGITS10_RE.match(hs):
+                yield {
+                    "requested_country": requested_country,
+                    "country_code": safe_text(elem, "statCd"),
+                    "month": ym,
+                    "hs_code_raw": hs,
+                    "hs_length": len(hs),
+                    "name_ko": safe_text(elem, "statKor"),
+                    "export_usd": as_int(safe_text(elem, "expDlr")),
+                    "export_weight_kg": as_int(safe_text(elem, "expWgt")),
+                    "import_usd": as_int(safe_text(elem, "impDlr")),
+                    "import_weight_kg": as_int(safe_text(elem, "impWgt")),
+                    "trade_balance_usd": as_int(safe_text(elem, "balPayments")),
+                    "source_raw_path": str(path),
+                }
+            elem.clear()
+
+
+def write_non_hs10_audit(
+    data_dir: Path,
+    outcomes: list[RequestOutcome],
+) -> tuple[Path, int, int, int, dict[str, int]]:
+    """Write quarantined mixed-granularity rows observed in successful leaves."""
+    out_dir = data_dir / "audits" / "coverage"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / "non_hs10_rows.csv"
+    fields = [
+        "requested_country",
+        "country_code",
+        "month",
+        "hs_code_raw",
+        "hs_length",
+        "name_ko",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "source_raw_path",
+    ]
+    row_count = 0
+    export_usd = 0
+    import_usd = 0
+    lengths: Counter[str] = Counter()
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for o in effective_leaf_outcomes(outcomes):
+            if not o.success or not o.raw_path:
+                continue
+            raw = Path(o.raw_path)
+            if not raw.exists():
+                continue
+            for row in iter_non_hs10_observations(raw, o.country):
+                w.writerow(row)
+                row_count += 1
+                export_usd += row["export_usd"] or 0
+                import_usd += row["import_usd"] or 0
+                lengths[str(row["hs_length"])] += 1
+    return path, row_count, export_usd, import_usd, dict(sorted(lengths.items()))
+
+
 def write_summary(
     data_dir: Path,
     outcomes: list[RequestOutcome],
     roots: list[tuple[str, Window]],
-) -> tuple[Path, Path, Path, Path, Path]:
+) -> tuple[Path, Path, Path, Path, Path, Path]:
     out_dir = data_dir / "audits" / "coverage"
     out_dir.mkdir(parents=True, exist_ok=True)
     json_path = out_dir / "pilot_results.json"
@@ -834,6 +909,9 @@ def write_summary(
     dupes = sum(o.duplicate_key_rows for o in successful)
 
     inventory_path, changes_path, variant_count = write_hs_name_audit(data_dir, outcomes)
+    anomaly_path, anomaly_rows, anomaly_export, anomaly_import, anomaly_lengths = write_non_hs10_audit(
+        data_dir, outcomes
+    )
     root_summaries = [logical_root_summary(country, window, outcomes) for country, window in roots]
 
     lines = [
@@ -850,6 +928,9 @@ def write_summary(
         f"- Fact rows parsed: {total_fact:,}",
         f"- Uncompressed XML bytes: {total_bytes:,}",
         f"- Non-HSK10 fact rows: {hs10_bad:,}",
+        f"- Non-HSK10 code-length distribution: `{json.dumps(anomaly_lengths, ensure_ascii=False)}`",
+        f"- Non-HSK10 export USD observed: {anomaly_export:,}",
+        f"- Non-HSK10 import USD observed: {anomaly_import:,}",
         f"- Duplicate extra rows: {dupes:,}",
         f"- HSK10 codes with >1 observed Korean item name: {variant_count:,}",
         "",
@@ -875,6 +956,13 @@ def write_summary(
         "- These files describe codes and names observed in trade rows only. A code missing from a "
         "pilot year may simply have had no trade; this is not a substitute for official HSK validity codebooks.",
         "",
+        "## Mixed-granularity anomaly policy",
+        "",
+        f"- Quarantined rows: `{anomaly_path.name}` ({anomaly_rows:,} rows)",
+        "- The API can return rare 6/9-digit trade rows alongside distinct 10-digit child codes.",
+        "- Raw XML is preserved unchanged. Shorter codes are never zero-padded, expanded, or assigned to a guessed HSK10.",
+        "- The canonical HSK10 fact table will contain only numeric 10-digit rows. Non-HSK10 rows remain in the anomaly audit and are included when explaining reconciliation differences.",
+        "",
         "## Interpretation rule",
         "",
         "The central hypothesis is accepted for a logical country-year only when all effective leaf "
@@ -886,7 +974,7 @@ def write_summary(
         "official aggregates/codebooks is still required.",
     ]
     report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return json_path, csv_path, report_path, inventory_path, changes_path
+    return json_path, csv_path, report_path, inventory_path, changes_path, anomaly_path
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -973,7 +1061,7 @@ def main() -> int:
             )
             break
 
-    json_path, csv_path, report_path, inventory_path, changes_path = write_summary(
+    json_path, csv_path, report_path, inventory_path, changes_path, anomaly_path = write_summary(
         data_dir, outcomes, attempted_roots
     )
     leaves = effective_leaf_outcomes(outcomes)
@@ -983,6 +1071,7 @@ def main() -> int:
     print(f"report={report_path}")
     print(f"hs_name_inventory={inventory_path}")
     print(f"hs_name_changes={changes_path}")
+    print(f"non_hs10_rows={anomaly_path}")
     if quota_exceeded:
         return 3
     if failures:
