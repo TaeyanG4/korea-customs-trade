@@ -246,15 +246,19 @@ def check_anomaly_text(path: Path) -> dict[str, Any]:
     bad = 0
     no_hangul = 0
     non_hs10_rows = 0
+    negative_weight_rows = 0
     for row in table.to_pylist():
         if row.get("reason") == "non_hs10_code":
             non_hs10_rows += 1
+        if row.get("reason") == "negative_weight":
+            negative_weight_rows += 1
         name = row.get("name_ko")
         bad += bool(bad_unicode_reason(name))
         no_hangul += bool(name) and not has_hangul(name)
     return {
         "rows": table.num_rows,
         "non_hs10_rows": non_hs10_rows,
+        "negative_weight_rows": negative_weight_rows,
         "bad_unicode_name_ko": bad,
         "korean_name_without_hangul": no_hangul,
         "ok": bad == 0,
@@ -305,6 +309,11 @@ def main() -> int:
     if int(anomaly.get("korean_name_without_hangul") or 0):
         warnings.append(
             f"source anomaly names without Hangul: {anomaly['korean_name_without_hangul']} (preserved, not rewritten)"
+        )
+    if int(anomaly.get("negative_weight_rows") or 0):
+        warnings.append(
+            f"source rows with negative reported weight: {anomaly['negative_weight_rows']} "
+            "(preserved exactly and exposed in the anomaly audit)"
         )
     normalization = checks["normalization"]
     if int(normalization.get("hsk_reference_unknown_unique") or 0):

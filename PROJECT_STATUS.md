@@ -71,10 +71,11 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, combined Parquet output, duplicate-label audits, and adjacent-year revision-transition review.
 - Stage 10 full collection completed for 2012–2026. The combined official HSK reference contains 178,911 `(reference_year, hs10)` rows with 0 missing Korean names, 0 missing English names, 0 invalid HSK10 values, 0 duplicate annual keys, and 0 prefix mismatches.
 - Three same-code source label variants were observed: two compatible 2012 wording expansions and one 2022 revision-boundary conflict. The 2022 conflict was resolved automatically against the adjacent 2021/2023 annual editions; unresolved duplicate-label reviews: 0.
-- Full test suite currently passes: 39 tests after the stage-11 residual/encoding/reconciliation QA additions.
+- Full test suite currently passes: 40 tests after the stage-11 residual/encoding/reconciliation QA additions.
 - Stage 11 code now targets annual HSK revision linkage, HS8/HS6/HS4/HS2 residual-aware analyst aggregates, and an automated Korean-text/UTF-8 release gate. Canonical source facts are not dropped merely because an HSK10 is absent from the annual CLIP reference; such rows keep a null revision and are audited.
 - Stage 11 dry-run confirms complete source selection: 4,035 successful source manifests, 47,075/47,075 country-month assignments, 2012-01 through 2026-07, and 0 overlap assignments.
 - A real US x 2025 stage-11 normalization smoke produced 77,606 canonical rows, 0 fatal anomalies, exact USD/trade-balance agreement with the response summary, and only 740 kg of accepted cumulative row-level weight rounding across 77,606 facts. Two January 2025 HSK10 codes are absent from the 2025 CLIP annual edition but exist through the 2024 edition; they remain canonical with null `hs_revision` and are audited rather than reassigned by inference.
+- The first full stage-11 normalization pass exposed 19 upstream rows with negative reported weight (but non-negative trade amounts and valid balances). These are now treated as source warnings rather than dropped facts: negative weights remain signed in canonical data and are surfaced in the anomaly audit. Negative monetary amounts remain fatal.
 
 ## Pending live work
 

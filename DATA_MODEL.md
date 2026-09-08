@@ -200,7 +200,7 @@ Before public release:
 - zero duplicate `(month, country_code, hs10)` canonical keys;
 - zero invalid HSK10 rows in the canonical HSK10 table;
 - zero month/partition mismatches;
-- zero unexplained negative amount/weight rows;
+- zero negative monetary-amount rows; negative source weights are preserved exactly, audited, and documented rather than silently clamped or dropped;
 - zero unexplained trade-balance mismatches;
 - source row counts reconcile with stored canonical + exception rows;
 - exception/residual monetary impact is quantified;

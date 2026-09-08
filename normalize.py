@@ -351,8 +351,8 @@ def canonical_row(
     imp_usd = as_required_int(elem, "impDlr")
     imp_wgt = as_required_int(elem, "impWgt")
     balance = as_required_int(elem, "balPayments")
-    if any(x < 0 for x in (exp_usd, exp_wgt, imp_usd, imp_wgt)):
-        raise ValueError("negative amount/weight")
+    if exp_usd < 0 or imp_usd < 0:
+        raise ValueError("negative amount")
     if exp_usd - imp_usd != balance:
         raise ValueError("trade balance mismatch")
     return {
@@ -525,6 +525,9 @@ def normalize_sources(
                             stats["fatal_anomalies"] += 1
                             elem.clear()
                             continue
+                        if row["export_weight_kg"] < 0 or row["import_weight_kg"] < 0:
+                            anomalies.append(anomaly_row(elem, source, month, hs, "negative_weight"))
+                            stats["negative_weight_rows"] += 1
                         buffers[month].append(row)
                         stats["canonical_rows"] += 1
                         if len(buffers[month]) >= 50_000:

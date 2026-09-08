@@ -1,5 +1,6 @@
 import gzip
 import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pyarrow.dataset as ds
@@ -202,3 +203,24 @@ def test_hsk_revision_map_is_applied_without_dropping_unknown_codes(tmp_path: Pa
     rows = {row["hs10"]: row for row in table.to_pylist()}
     assert rows["0101219000"]["hs_revision"] == "HSK-2025"
     assert rows["9999999999"]["hs_revision"] is None
+
+
+def test_negative_weight_is_preserved_but_negative_amount_is_fatal():
+    negative_weight = ET.fromstring(
+        "<item><expDlr>10</expDlr><expWgt>-3</expWgt><impDlr>2</impDlr>"
+        "<impWgt>1</impWgt><balPayments>8</balPayments></item>"
+    )
+    row = normalize.canonical_row(negative_weight, "US", "202501", "0101219000")
+    assert row["export_weight_kg"] == -3
+    assert row["export_usd"] == 10
+
+    negative_amount = ET.fromstring(
+        "<item><expDlr>-1</expDlr><expWgt>1</expWgt><impDlr>0</impDlr>"
+        "<impWgt>0</impWgt><balPayments>-1</balPayments></item>"
+    )
+    try:
+        normalize.canonical_row(negative_amount, "US", "202501", "0101219000")
+    except ValueError as exc:
+        assert str(exc) == "negative amount"
+    else:
+        raise AssertionError("negative monetary amount must remain fatal")

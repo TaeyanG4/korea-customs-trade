@@ -200,7 +200,7 @@ m49
 - canonical `(month,country_code,hs10)` duplicate 0;
 - canonical HSK10 비정상 코드 0;
 - month/partition mismatch 0;
-- 설명되지 않은 음수 금액/중량 0;
+- 음수 거래금액 0; 관세청 원천의 음수 중량은 0으로 보정하거나 삭제하지 않고 원값 그대로 보존하며 anomaly/warning으로 공개;
 - 설명되지 않은 trade-balance mismatch 0;
 - source row 수가 canonical + exception으로 reconciliation;
 - exception/residual 금액 영향을 정량화;
