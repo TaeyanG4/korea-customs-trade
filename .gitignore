@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.pytest_tmp/
+*.pyc
+.env
+.env.*
+!.env.example
+
+# Raw and generated data are intentionally local / release artifacts.
+data/raw/
+data/normalized/
+data/derived/
+data/reference/
+data/audits/
+
+# Local editor / OS noise.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
