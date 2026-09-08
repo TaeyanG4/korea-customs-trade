@@ -4,7 +4,7 @@ Last updated: 2026-09-09
 
 ## Roadmap progress
 
-Current stage: **12/12 — build and publish the Kaggle release package**
+Current stage: **12/12 — Kaggle release package built; private upload/publication pending**
 
 Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleaning; preserve official source truth and prioritize analyst usability, documentation, reproducibility, and encoding-safe release files.
 
@@ -76,6 +76,11 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - Stage 11 dry-run confirms complete source selection: 4,035 successful source manifests, 47,075/47,075 country-month assignments, 2012-01 through 2026-07, and 0 overlap assignments.
 - A real US x 2025 stage-11 normalization smoke produced 77,606 canonical rows, 0 fatal anomalies, exact USD/trade-balance agreement with the response summary, and only 740 kg of accepted cumulative row-level weight rounding across 77,606 facts. Two January 2025 HSK10 codes are absent from the 2025 CLIP annual edition but exist through the 2024 edition; they remain canonical with null `hs_revision` and are audited rather than reassigned by inference.
 - The first full stage-11 normalization pass exposed 19 upstream rows with negative reported weight (but non-negative trade amounts and valid balances). These are now treated as source warnings rather than dropped facts: negative weights remain signed in canonical data and are surfaced in the anomaly audit. Negative monetary amounts remain fatal.
+- Stage 11 final release QA passes with `release_gate_pass=True`, 0 fatal sections, 22,351,430 strict HSK10 rows, 53 non-HSK10 source residual rows, and 19 preserved negative-weight warnings.
+- Stage 12 Kaggle release package is built under `release/kaggle/`. The five analyst tables contain: HSK10 22,351,430 rows / 417,772,573 bytes; HS8 20,576,865 / 353,063,936; HS6 16,059,132 / 256,630,827; HS4 7,234,105 / 124,283,327; HS2 1,446,045 / 28,697,114.
+- Kaggle-facing support files include the 178,911-row annual HSK reference, 269-row country reference, 53-row non-HSK10 exception table, 19-row negative-weight warning table, 925-row HSK-reference-gap audit, latest-month HS6 CSV sample, coverage report, data dictionary, methodology, sources, cover image, dataset metadata, and release manifest.
+- All upload-facing text/CSV files decode strictly as UTF-8. Korean values in the HSK reference, HSK-reference-gap audit, source-code exceptions, and weight-warning table were rechecked at Unicode codepoint level and are intact; earlier mojibake-like terminal output was a console-rendering artifact, not file corruption.
+- SHA-256 verification re-read every checksummed release artifact and matched the release manifest for all 15 recorded files.
 - Stage 11 full rebuild completed and passed release QA: 22,351,430 strict HSK10 rows, 53 non-HSK10 source residual rows, 19 preserved negative-weight warning rows, 175 monthly partitions, 0 duplicate canonical keys, 0 partition mismatches, and `release_gate_pass=true` with 0 fatal sections.
 - Full derived outputs completed for HS8/HS6/HS4/HS2 with 175 monthly partitions each and residual-aware total reconciliation.
 - Stage 12 release tooling is being prepared to package one Parquet per analytical grain, a latest-month HS6 preview CSV, references/audits, a checksummed release manifest, complete Kaggle file/column metadata, provenance, cover image, and usage documentation.
