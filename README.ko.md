@@ -12,7 +12,7 @@
 
 ## 현재 단계
 
-현재는 **API pilot 단계**입니다. 전체 backfill 전에 다음 핵심 가정을 실제 API 호출로 검증합니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline까지 완료했고 현재는 **full historical backfill 단계**입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
@@ -25,11 +25,13 @@
 
 ### 로드맵 진행 상황
 
-현재 단계는 **8/12 — normalization 및 Parquet 출력 구현**입니다. 1~7단계는 완료했습니다. production collector는 공식 KCS 269개 코드를 기준으로 scheduling하고, 최신 안정월 계산, 성공 checkpoint 재사용, run-level manifest, 일일 quota 즉시 중단, 초당 rate-limit 재시도, historical backfill 및 13개월 revision refresh를 지원합니다.
+현재 단계는 **9/12 — full historical backfill**입니다. 1~8단계는 완료했습니다. production collector는 공식 KCS 269개 코드를 scheduling하고, revision-safe normalization은 각 `(country, month)`마다 가장 최신의 성공 raw source 1개만 선택해 strict HSK10 Parquet을 생성합니다.
 
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
 
-공식 KCS 조회코드 workbook에서 **269개 고유 국가코드**를 확보했습니다. 269개 전부를 2025-01 API로 검증한 결과 모두 정상 `resultCode=00`이었고, 236개는 해당 월 거래 row가 있었으며 33개는 거래가 없었습니다. 269개 전체에서 **128,207 fact rows**가 관측됐고 모두 숫자형 HSK10이었습니다. 따라서 대형국 표본에 치우쳤던 이전 추정을 폐기하고 full-history planning band를 약 **2,200만~3,500만 rows**로 재조정합니다. production root request는 **269 × 15년 = 4,035회**이며 adaptive split 발생 전 기준입니다. Parquet 크기는 8단계에서 실제 생성 후 측정합니다.
+공식 KCS 조회코드 workbook에서 **269개 고유 국가코드**를 확보했습니다. 269개 전부를 2025-01 API로 검증한 결과 모두 정상 `resultCode=00`이었고, 236개는 해당 월 거래 row가 있었으며 33개는 거래가 없었습니다. 269개 전체에서 **128,207 fact rows**가 관측됐고 모두 숫자형 HSK10이었습니다. full-history planning band는 약 **2,200만~3,500만 rows**, production root request는 **4,035회**입니다.
+
+8단계에서 실제 canonical 1,756,794 rows로 Parquet을 측정했습니다. HSK10 **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, HS2 **1.06 MB**였고 duplicate 0, partition mismatch 0, fatal normalization anomaly 0이었습니다. 이 비율을 planning band에 적용하면 HSK10은 약 **451~717 MB**, HSK10+HS6+HS4+HS2 전체는 약 **0.83~1.33 GB**로 예상합니다.
 
 국가코드 authority 정책은 다음과 같습니다.
 
@@ -107,7 +109,7 @@ country × year
 
 이 프로젝트는 호출량을 다음 원칙으로 관리합니다.
 
-- 성공하는 경우 `country × year` 1회 요청을 우선합니다. 약 240개국 × 15년이면 root 요청은 약 3,600회입니다.
+- 성공하는 경우 `country × calendar-year window` 1회 요청을 우선합니다. 공식 목록 기준 현재 계획은 269개 코드 × 15개 window = **4,035 root requests**입니다.
 - 성공하는 요청을 미리 quarter/month로 쪼개지 않습니다. adaptive split은 대용량 응답/timeout의 fallback으로만 사용합니다.
 - 공공데이터포털 gateway reason code `22` (`LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`)가 반환되면 collector는 추가 호출을 낭비하지 않고 즉시 중단합니다. 성공한 manifest는 그대로 checkpoint/resume에 사용됩니다.
 - pilot에서 adaptive split 비율이 높아 일 10,000회를 넘길 가능성이 확인되면 production backfill 전에 운영계정/트래픽 증설을 신청합니다.
@@ -153,6 +155,15 @@ data/
     year=2025/
       country=US/
         response_202501-202512.xml.gz
+  normalized/
+    hs10/
+      year=2025/
+        mm=01/
+          part-00000.parquet
+  derived/
+    hs6/year=2025/mm=01/part-00000.parquet
+    hs4/year=2025/mm=01/part-00000.parquet
+    hs2/year=2025/mm=01/part-00000.parquet
   audits/
     manifests/
       year=2025/
@@ -164,6 +175,12 @@ data/
       pilot_report.md
       hs_name_inventory.csv
       hs_name_changes.csv
+    normalization/
+      source_selection.csv
+      normalization_manifest.json
+      normalization_anomalies.csv
+    derivation/
+      derivation_manifest.json
 ```
 
 raw 및 생성 데이터는 기본적으로 Git에서 제외합니다. GitHub에는 코드, 설정 템플릿, 문서, 재현 가능한 파이프라인 로직을 백업하고 서비스 키나 대용량 raw 응답은 올리지 않습니다.
@@ -186,7 +203,7 @@ pytest -q
 
 Pilot `PASS`는 해당 요청에서 관찰된 API 동작을 검증하는 것입니다. 과거 모든 유효 HSK10 code가 완전하게 반환된다는 사실까지 증명하지는 않습니다. 공개 release 전에는 별도 공식 합계와 revision-aware HSK codebook을 이용한 reconciliation이 필요합니다.
 
-## 예정 canonical fact schema
+## Canonical fact schema
 
 ```text
 month
@@ -203,7 +220,11 @@ trade_balance_usd
 hs_revision
 ```
 
-국가명과 긴 품목명은 가능하면 fact table에서 반복하지 않고 dimension으로 분리합니다.
+`month`는 `YYYYMM` 문자열입니다. `hs6`, `hs4`, `hs2`는 `hs10`의 strict prefix입니다. `hs_revision`은 10단계에서 공식 revision-aware HSK source로 채우기 전까지 nullable이며 trade row를 보고 임의 추정하지 않습니다.
+
+Normalization은 raw 요청이 겹쳐도 `(country, month)`별로 가장 최근 성공 manifest를 1개만 선택합니다. 따라서 월간 revision refresh에서 과거 row가 삭제된 경우에도 append-only stale row가 남지 않고 전체 rebuild 시 정상적으로 사라집니다.
+
+HS6/HS4/HS2는 **canonical HSK10 Parquet만 로컬 집계**해 생성하며 lower-level 관세청 API를 별도로 호출하지 않습니다. 국가명과 긴 품목명은 가능한 한 fact table에서 반복하지 않고 reference/dimension으로 분리합니다.
 
 ## Kaggle 포지셔닝
 

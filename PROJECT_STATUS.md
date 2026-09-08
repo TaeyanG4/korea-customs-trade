@@ -4,7 +4,7 @@ Last updated: 2026-09-08
 
 ## Roadmap progress
 
-Current stage: **8/12 — normalization and Parquet output**
+Current stage: **9/12 — full historical backfill**
 
 1. Project status / README refresh for the active API key
 2. US x 2025 full-year pilot with `hsSgn` omitted
@@ -56,6 +56,13 @@ Current stage: **8/12 — normalization and Parquet output**
 - Default backfill plan on 2026-09-08 resolves to 2012-01 through 2026-07: 269 countries × 15 calendar-year windows = 4,035 roots.
 - Refresh mode refetches the latest stable month plus the preceding 12 months (13 inclusive months) and currently resolves to 2025-07 through 2026-07.
 - Production smoke tests passed both checkpoint reuse (US 2025) and a new live annual request (AD 2025, 101 rows).
+- Revision-safe source selection implemented: each `(country, month)` uses exactly one latest successful request manifest, preventing duplicate normalized facts when refresh windows overlap historical backfill windows.
+- Strict HSK10 normalization implemented with canonical 12-column schema and nullable `hs_revision` pending stage 10.
+- Parquet layout uses `year=YYYY/mm=MM` partitions to avoid a Hive partition-name collision with the canonical `month=YYYYMM` column.
+- Current real-data normalization sample: 1,756,794 canonical HSK10 rows, 5 non-HSK10 upstream anomalies quarantined, 48 monthly files, 0 duplicate keys, 0 partition mismatches, 0 fatal anomalies.
+- Sample HSK10 Parquet size: 36,000,067 bytes (~20.5 bytes/input row), normalized in about 33 seconds.
+- HS6/HS4/HS2 are derived locally from HSK10 only; aggregate totals reconcile exactly to HSK10 for all monetary/weight measures.
+- Current derived sample: HS6 1,091,103 rows / 21.84 MB; HS4 353,003 / 7.68 MB; HS2 39,934 / 1.06 MB.
 
 ## Pending live work
 
@@ -86,10 +93,10 @@ Measured transport/storage characteristics across the representative matrix were
 
 Stage 6 replaces the provisional country-count assumption. The official KCS lookup workbook contains 269 unique country codes. A live one-month validation accepted 269/269 codes; 236 had fact rows in 2025-01 and 33 had zero trade rows for that month. Across all 269 codes, 2025-01 contained 128,207 fact rows and all were numeric HSK10 with no returned-country mismatch.
 
-This full-code one-month census materially improves the scale estimate: holding January 2025 density constant across 180 months gives about 23.1 million rows. Because historical density and monthly seasonality vary, the production planning band is reset to roughly **22–35 million rows**, consistent with the original project estimate. At the measured ~32.1 gzip bytes per fact row, this suggests roughly **0.7–1.1 GB** of raw XML gzip for fact-row payload density alone; filesystem/XML overhead and retry/split artifacts justify retaining a more conservative local raw budget around **1–2 GB**. Exact Parquet size remains unmeasured until stage 8.
+This full-code one-month census materially improves the scale estimate: holding January 2025 density constant across 180 months gives about 23.1 million rows. Because historical density and monthly seasonality vary, the production planning band is roughly **22–35 million rows**. At the measured ~32.1 gzip bytes per fact row, this suggests roughly **0.7–1.1 GB** of raw XML gzip for fact-row payload density alone; filesystem/XML overhead and retry/split artifacts justify retaining a more conservative local raw budget around **1–2 GB**.
 
 The production root-request count is now based on the official code list: **269 country codes × 15 calendar years (2012–2026) = 4,035 root requests** before any adaptive splits. The representative matrix observed a 0% split rate.
 
-Stage 7 is complete. The collector is intentionally not running the 4,035-root full backfill yet; stage 8 must first define a deterministic normalization path so raw requests, including future overlapping refresh windows, cannot create duplicate normalized facts.
+Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Next action: implement strict HSK10 XML -> Parquet normalization, month/year partitioning, deterministic source selection for overlapping requests, anomaly quarantine, and schema/row-count validation before stage 9 full backfill.
+Next action: run the full 4,035-root historical collection through 2026-07, preserving checkpoints and stopping safely if the API quota or permission state changes. After collection, rebuild normalization with `--require-full-coverage` so all **269 × 175 months = 47,075 country-month source assignments** are present before stage 10.

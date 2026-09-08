@@ -12,7 +12,7 @@ The final dataset will preserve full Korean **10-digit HSK** detail and derive `
 
 ## Current phase
 
-The project is in the **API pilot** phase. Before any full backfill, it tests the most important collection assumption:
+The API pilot, country-reference validation, production collector, and normalization pipeline are complete. The project is now in the **full historical backfill** phase. The original central collection assumption was:
 
 > When `cntyCd` and a period are supplied but `hsSgn` is omitted, does the Korea Customs item-by-country API return the full monthly HSK10 trade rows for that country?
 
@@ -25,11 +25,13 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **8/12 — normalization and Parquet output**. Stages 1–7 are complete. The production collector now schedules all 269 official KCS codes, computes the latest stable month conservatively, reuses successful checkpoints, records run-level manifests, stops on daily quota exhaustion, retries per-second rate limits, and supports both historical backfill and 13-month revision refreshes.
+Current stage: **9/12 — full historical backfill**. Stages 1–8 are complete. The production collector schedules all 269 official KCS codes, and a revision-safe normalization pipeline converts the selected latest raw source for every `(country, month)` into strict HSK10 Parquet.
 
 The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
 
-The official KCS lookup workbook currently yields **269 unique country codes**. All 269 were accepted by a live 2025-01 API validation; 236 had trade rows that month and 33 returned no trade rows. The all-code January census contained **128,207 fact rows**, all numeric HSK10. This resets the full-history planning band to roughly **22–35 million rows** rather than the earlier major-country-biased estimate. The production root-request count is **4,035** (269 codes × 15 calendar years) before adaptive splits. Parquet size will be measured in stage 8 rather than guessed.
+The official KCS lookup workbook currently yields **269 unique country codes**. All 269 were accepted by a live 2025-01 API validation; 236 had trade rows that month and 33 returned no trade rows. The all-code January census contained **128,207 fact rows**, all numeric HSK10. The full-history planning band is roughly **22–35 million rows** and the production root-request count is **4,035** (269 codes × 15 calendar-year windows) before adaptive splits.
+
+Stage 8 measured Parquet on 1,756,794 real canonical rows: HSK10 was **36.0 MB**, HS6 **21.84 MB**, HS4 **7.68 MB**, and HS2 **1.06 MB**. The sample had 0 duplicate keys, 0 partition mismatches, and 0 fatal normalization anomalies. Projecting the measured ratios onto the planning band gives roughly **451–717 MB for HSK10** and **0.83–1.33 GB combined for HSK10+HS6+HS4+HS2**.
 
 Country-code authority policy:
 
@@ -107,7 +109,7 @@ The official data.go.kr page currently lists **10,000 requests/day for a develop
 
 For this project, quota should be managed conservatively:
 
-- Prefer one `country × year` request. If that succeeds consistently, roughly 240 countries × 15 years is only about 3,600 root requests.
+- Prefer one `country × calendar-year window` request. With the official reference this is 269 codes × 15 windows = **4,035 root requests** for the current 2012-01–2026-07 plan.
 - Do not pre-split successful requests into quarters or months; adaptive splitting is only a fallback for oversized/time-out responses.
 - If data.go.kr returns gateway reason code `22` (`LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR`), the collector stops the run immediately instead of wasting more calls. Successful manifests remain resumable.
 - Apply for an operating account / traffic increase before the production backfill if pilot measurements show that adaptive splitting could push the run above the daily allowance.
@@ -163,6 +165,15 @@ data/
     year=2025/
       country=US/
         response_202501-202512.xml.gz
+  normalized/
+    hs10/
+      year=2025/
+        mm=01/
+          part-00000.parquet
+  derived/
+    hs6/year=2025/mm=01/part-00000.parquet
+    hs4/year=2025/mm=01/part-00000.parquet
+    hs2/year=2025/mm=01/part-00000.parquet
   audits/
     manifests/
       year=2025/
@@ -174,6 +185,12 @@ data/
       pilot_report.md
       hs_name_inventory.csv
       hs_name_changes.csv
+    normalization/
+      source_selection.csv
+      normalization_manifest.json
+      normalization_anomalies.csv
+    derivation/
+      derivation_manifest.json
 ```
 
 Raw and generated data are excluded from Git by default. GitHub is used to back up code, configuration templates, documentation, and reproducible pipeline logic—not service keys or bulky raw responses.
@@ -190,7 +207,7 @@ A logical country-year receives `PASS` only when all effective leaf requests suc
 
 A pilot `PASS` verifies observed API behavior for the tested request. It does **not** prove historical HSK-code completeness. Public release will still require reconciliation against independent official aggregates and revision-aware HSK codebooks.
 
-## Planned canonical fact schema
+## Canonical fact schema
 
 ```text
 month
@@ -207,7 +224,11 @@ trade_balance_usd
 hs_revision
 ```
 
-HSK names and country names should live in dimensions rather than repeat across the fact table wherever possible.
+`month` is stored as `YYYYMM`. `hs6`, `hs4`, and `hs2` are strict prefixes of `hs10`. `hs_revision` is intentionally nullable during stage 8/9 and will only be populated from official revision-aware HSK sources in stage 10; no revision is inferred from trade rows.
+
+Normalization resolves overlapping raw requests by choosing the latest successful manifest independently for every `(country, month)`. This is important for monthly revision refreshes: an older row can disappear in a newer source and will then disappear from the rebuilt normalized dataset rather than surviving as a stale append-only record.
+
+HS6/HS4/HS2 output is aggregated **only from canonical HSK10 Parquet**. The lower-level KCS API is never queried to create these derived facts. HSK names and country names live in reference/dimension data rather than repeat across the fact table wherever possible.
 
 ## Dataset positioning
 
