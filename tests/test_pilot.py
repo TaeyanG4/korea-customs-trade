@@ -33,6 +33,15 @@ RATE_LIMIT_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
   </cmmMsgHeader>
 </OpenAPI_ServiceResponse>'''
 
+AUTH_XML = b'''<?xml version="1.0" encoding="UTF-8"?>
+<OpenAPI_ServiceResponse>
+  <cmmMsgHeader>
+    <errMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</errMsg>
+    <returnAuthMsg>UNREGISTERED SERVICE KEY</returnAuthMsg>
+    <returnReasonCode>30</returnReasonCode>
+  </cmmMsgHeader>
+</OpenAPI_ServiceResponse>'''
+
 
 def test_parse_and_validate(tmp_path: Path):
     p = tmp_path / "x.xml.gz"
@@ -232,6 +241,52 @@ def test_per_second_rate_limit_is_classified(tmp_path: Path):
     assert outcome.status == "rate_limited"
     assert outcome.api_result_code == "23"
     assert pilot.should_split(outcome) is False
+
+
+def test_http_429_body_is_classified_as_rate_limit_without_split(tmp_path: Path):
+    response = FakeResponse([RATE_LIMIT_XML], status_code=429)
+    session = FakeSession([response])
+    outcome = pilot.download_one(
+        session=session,
+        service_key="SECRET+KEY==",
+        country="US",
+        window=pilot.Window("202501", "202512"),
+        data_dir=tmp_path,
+        connect_timeout=1,
+        read_timeout=1,
+        retries=2,
+        force=True,
+    )
+    assert outcome.success is False
+    assert outcome.status == "rate_limited"
+    assert outcome.http_status == 429
+    assert outcome.api_result_code == "23"
+    assert session.calls == 1
+    assert pilot.should_split(outcome) is False
+
+
+def test_http_403_gateway_body_is_classified_as_auth_error(tmp_path: Path):
+    response = FakeResponse([AUTH_XML], status_code=403)
+    session = FakeSession([response])
+    outcome = pilot.download_one(
+        session=session,
+        service_key="SECRET+KEY==",
+        country="US",
+        window=pilot.Window("202501", "202512"),
+        data_dir=tmp_path,
+        connect_timeout=1,
+        read_timeout=1,
+        retries=2,
+        force=True,
+    )
+    assert outcome.success is False
+    assert outcome.status == "auth_error"
+    assert outcome.http_status == 403
+    assert outcome.api_result_code == "30"
+    assert session.calls == 1
+    assert pilot.should_split(outcome) is False
+    manifest_text = Path(outcome.manifest_path).read_text(encoding="utf-8")
+    assert "SECRET" not in manifest_text
 
 
 def test_logical_root_split_success():

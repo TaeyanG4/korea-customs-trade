@@ -136,7 +136,7 @@ def contains_status(outcomes: Iterable[pilot.RequestOutcome], status: str) -> bo
 
 def contains_auth_failure(outcomes: Iterable[pilot.RequestOutcome]) -> bool:
     return any(
-        (o.api_result_code or "") in AUTH_ERROR_CODES
+        o.status == "auth_error" or (o.api_result_code or "") in AUTH_ERROR_CODES
         for o in pilot.effective_leaf_outcomes(outcomes)
         if not o.success
     )
@@ -233,6 +233,7 @@ def main() -> int:
                 retries=args.retries,
                 force=force or attempt > 0,
                 adaptive_split=True,
+                verbose=False,
             )
             if contains_status(outcomes, "rate_limited") and attempt < args.rate_limit_retries:
                 attempt += 1

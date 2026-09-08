@@ -31,7 +31,8 @@ import requests
 API_URL = "https://apis.data.go.kr/1220000/nitemtrade/getNitemtradeList"
 DEFAULT_COUNTRIES = ["US", "CN", "JP", "VN", "DE"]
 DEFAULT_YEARS = [2012, 2017, 2022, 2025]
-SPLITTABLE_HTTP = {408, 413, 429, 500, 502, 503, 504}
+SPLITTABLE_HTTP = {408, 413, 500, 502, 503, 504}
+BODY_CLASSIFIABLE_HTTP = {400, 401, 403, 404, 405, 409, 422, 429}
 MONTH_RE = re.compile(r"^(\d{4})\.(\d{2})$")
 DIGITS10_RE = re.compile(r"^\d{10}$")
 
@@ -398,6 +399,21 @@ def download_one(
             )
             http_status = response.status_code
             content_type = response.headers.get("Content-Type")
+            if response.status_code in BODY_CLASSIFIABLE_HTTP:
+                # data.go.kr often returns useful gateway XML even with an HTTP
+                # error status. Preserve and parse it so auth/rate-limit failures
+                # are classified instead of blindly retried or split.
+                with gzip.open(tmp_path, "wb", compresslevel=6) as gz:
+                    for chunk in response.iter_content(chunk_size=1024 * 1024):
+                        if not chunk:
+                            continue
+                        attempt_bytes += len(chunk)
+                        sha.update(chunk)
+                        gz.write(chunk)
+                tmp_path.replace(raw_path)
+                response_bytes = attempt_bytes
+                response_sha = sha.hexdigest()
+                break
             if response.status_code in SPLITTABLE_HTTP:
                 raise requests.HTTPError(f"HTTP {response.status_code}", response=response)
             response.raise_for_status()
@@ -468,9 +484,10 @@ def download_one(
     elapsed = time.monotonic() - t0
     api_code = metrics.get("api_result_code")
     api_msg = (metrics.get("api_result_msg") or "").upper()
+    http_ok = http_status is not None and 200 <= http_status < 300
     api_ok = api_code == "00"
     parse_ok = parse_error is None
-    success = bool(api_ok and parse_ok)
+    success = bool(http_ok and api_ok and parse_ok)
     daily_quota_exceeded = (
         api_code == "22"
         or "LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS" in api_msg
@@ -478,15 +495,22 @@ def download_one(
     per_second_rate_limited = (
         api_code == "23"
         or "LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND_EXCEEDS" in api_msg
+        or http_status == 429
+    )
+    auth_or_permission_error = (
+        api_code in {"20", "30", "31"}
+        or http_status in {401, 403}
     )
     if success:
         status = "success"
-    elif not parse_ok:
-        status = "parse_error"
     elif daily_quota_exceeded:
         status = "quota_exceeded"
     elif per_second_rate_limited:
         status = "rate_limited"
+    elif auth_or_permission_error:
+        status = "auth_error"
+    elif not parse_ok:
+        status = "parse_error"
     else:
         status = "api_error"
     outcome = RequestOutcome(
@@ -543,6 +567,7 @@ def collect_with_split(
     force: bool,
     adaptive_split: bool,
     parent_request: str | None = None,
+    verbose: bool = True,
 ) -> list[RequestOutcome]:
     outcome = download_one(
         session=session,
@@ -556,18 +581,20 @@ def collect_with_split(
         force=force,
         parent_request=parent_request,
     )
-    print(
-        f"[{country} {window.label}] {outcome.status} "
-        f"rows={outcome.fact_row_count} bytes={outcome.response_bytes} "
-        f"elapsed={outcome.elapsed_seconds:.1f}s"
-    )
+    if verbose:
+        print(
+            f"[{country} {window.label}] {outcome.status} "
+            f"rows={outcome.fact_row_count} bytes={outcome.response_bytes} "
+            f"elapsed={outcome.elapsed_seconds:.1f}s"
+        )
     if not adaptive_split or not should_split(outcome):
         return [outcome]
 
     children = split_window(window)
     if not children:
         return [outcome]
-    print(f"  -> adaptive split: {window.label} into {len(children)} child window(s)")
+    if verbose:
+        print(f"  -> adaptive split: {window.label} into {len(children)} child window(s)")
     all_outcomes = [outcome]
     parent = f"{country}:{window.label}"
     for child in children:
@@ -584,6 +611,7 @@ def collect_with_split(
                 force=force,
                 adaptive_split=adaptive_split,
                 parent_request=parent,
+                verbose=verbose,
             )
         )
     return all_outcomes
