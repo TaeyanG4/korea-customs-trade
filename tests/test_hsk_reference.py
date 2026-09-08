@@ -92,7 +92,7 @@ def test_parse_chapter_resolves_compatible_duplicate_label():
     assert audit[0]["resolution"] == "prefer_more_specific_compatible_label"
 
 
-def test_parse_chapter_rejects_contradictory_duplicate_label():
+def test_parse_chapter_preserves_contradictory_duplicate_label_for_review():
     idx = YearIndex(2012, "20120101", "20120101", ("71",))
     html = """
     <table><tbody id="tblLstBody">
@@ -106,5 +106,10 @@ def test_parse_chapter_rejects_contradictory_duplicate_label():
       </tr>
     </tbody></table>
     """
-    with pytest.raises(ValueError, match="conflicting duplicate HSK10"):
-        parse_chapter_html(html, idx, "71")
+    audit = []
+    rows = parse_chapter_html(html, idx, "71", audit)
+    assert len(rows) == 1
+    assert rows[0]["name_ko"] == "기타"
+    assert rows[0]["name_en"] == "Other"
+    assert len(audit) == 1
+    assert audit[0]["resolution"] == "prefer_first_source_order_pending_adjacent_year_review"

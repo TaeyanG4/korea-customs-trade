@@ -131,21 +131,28 @@ def resolve_duplicate_row(
     chapter: str,
     duplicate_audit: list[dict[str, Any]] | None,
 ) -> dict[str, Any]:
-    """Resolve compatible duplicate labels while failing closed on conflicts."""
+    """Resolve duplicate CLIP labels without discarding source variants.
+
+    Compatible wording variants keep the most descriptive label. If CLIP
+    exposes genuinely different labels for the same exact HSK10 within one
+    annual edition (observed at HS revision boundaries), preserve both labels
+    in the audit and keep the first source-order definition provisionally.
+    Adjacent-year QA determines whether it is a stale prior-edition duplicate.
+    Structural/non-name conflicts still fail closed.
+    """
     non_name_fields = [k for k in previous if k not in {"name_ko", "name_en"}]
     if any(previous[k] != current[k] for k in non_name_fields):
         raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
-    if not labels_compatible(previous.get("name_ko"), current.get("name_ko")):
-        raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
-    if not labels_compatible(previous.get("name_en"), current.get("name_en")):
-        raise ValueError(f"conflicting duplicate HSK10 {previous['hs10']} in chapter {chapter}")
+    compatible = labels_compatible(previous.get("name_ko"), current.get("name_ko")) and labels_compatible(
+        previous.get("name_en"), current.get("name_en")
+    )
 
     def score(row: dict[str, Any]) -> tuple[int, int, int]:
         ko = row.get("name_ko") or ""
         en = row.get("name_en") or ""
         return (int(bool(ko)) + int(bool(en)), len(ko) + len(en), len(ko))
 
-    selected = current if score(current) > score(previous) else previous
+    selected = (current if score(current) > score(previous) else previous) if compatible else previous
     if duplicate_audit is not None:
         duplicate_audit.append(
             {
@@ -160,7 +167,11 @@ def resolve_duplicate_row(
                 ),
                 "selected_name_ko": selected.get("name_ko"),
                 "selected_name_en": selected.get("name_en"),
-                "resolution": "prefer_more_specific_compatible_label",
+                "resolution": (
+                    "prefer_more_specific_compatible_label"
+                    if compatible
+                    else "prefer_first_source_order_pending_adjacent_year_review"
+                ),
             }
         )
     return selected
