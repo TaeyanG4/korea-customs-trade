@@ -14,7 +14,7 @@ The final dataset will preserve full Korean **10-digit HSK** detail and derive `
 
 ## Current phase
 
-The API pilot, country-reference validation, production collector, normalization pipeline, and full historical backfill are complete. The project is now building the **revision-aware HSK reference dimension** from official Korea Customs Service CLIP annual tariff tables. The original central collection assumption was:
+The API pilot, country-reference validation, production collector, normalization pipeline, full historical backfill, and official annual HSK reference collection are complete. The project is now in **reconciliation and release QA**. The original central collection assumption was:
 
 > When `cntyCd` and a period are supplied but `hsSgn` is omitted, does the Korea Customs item-by-country API return the full monthly HSK10 trade rows for that country?
 
@@ -27,7 +27,7 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **10/12 — revision-aware HSK dimension**. Stages 1–9 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. The production collector and revision-safe normalization pipeline are ready for a full rebuild.
+Current stage: **11/12 — reconciliation and release QA**. Stages 1–10 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. The official CLIP annual HSK reference for 2012–2026 contains 178,911 annual HSK10 rows with complete Korean/English naming coverage and no unresolved duplicate-label reviews.
 
 The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
 
@@ -52,7 +52,7 @@ python .\hsk_reference.py probe --year 2022 --chapter 01
 .\run_hsk_reference.ps1
 ```
 
-The first live probe parsed 69 HSK10 rows from 2022 chapter 01 with no missing Korean or English names. Full collection is intentionally a user-run long task. `HSK-YYYY` means the official CLIP **annual edition**; the project does not infer unsupported sub-annual legal amendment boundaries from the annual selector.
+The first live probe parsed 69 HSK10 rows from 2022 chapter 01 with no missing Korean or English names. The full 2012–2026 collection is now complete: 178,911 annual HSK10 rows, 0 missing Korean names, 0 missing English names, 0 duplicate annual keys, and 0 prefix mismatches. Three same-code source label variants were observed; two compatible 2012 wording expansions were resolved by preferring the more specific wording, and one 2022 revision-boundary conflict was resolved automatically against the 2021/2023 editions. `HSK-YYYY` means the official CLIP **annual edition**; the project does not infer unsupported sub-annual legal amendment boundaries from the annual selector.
 
 ## Production collector
 

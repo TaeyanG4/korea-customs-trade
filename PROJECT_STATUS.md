@@ -4,7 +4,7 @@ Last updated: 2026-09-08
 
 ## Roadmap progress
 
-Current stage: **10/12 — revision-aware HSK dimension**
+Current stage: **11/12 — reconciliation and release QA**
 
 1. Project status / README refresh for the active API key
 2. US x 2025 full-year pilot with `hsSgn` omitted
@@ -66,9 +66,10 @@ Current stage: **10/12 — revision-aware HSK dimension**
 - Full historical backfill completed: 4,035/4,035 scheduled roots succeeded, 22,351,483 fact rows collected, 343 successful checkpoints reused, 0 unresolved failures.
 - Durable analyst-facing data model is documented in `DATA_MODEL.md` / `DATA_MODEL.ko.md`: separate HS2/HS4/HS6/HS8/HSK10 files, strict HSK10 canonical grain, non-HSK10 quarantine, and residual-aware upper-level aggregation without guessing.
 - Official revision-reference source selected: Korea Customs Service CLIP annual Korean tariff tables, available across the project period.
-- `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, and combined Parquet output.
-- Stage-10 live probe passed for 2022 chapter 01: 69 exact HSK10 rows, 0 missing Korean names, 0 missing English names. Probe output is isolated from complete annual output.
-- Full test suite currently passes: 30 tests.
+- `hsk_reference.py` implements cached/resumable CLIP retrieval using one request per HS chapter, strict HSK10 parsing, Korean/English names, HS8/HS6/HS4/HS2 prefixes, annual `HSK-YYYY` editions, combined Parquet output, duplicate-label audits, and adjacent-year revision-transition review.
+- Stage 10 full collection completed for 2012–2026. The combined official HSK reference contains 178,911 `(reference_year, hs10)` rows with 0 missing Korean names, 0 missing English names, 0 invalid HSK10 values, 0 duplicate annual keys, and 0 prefix mismatches.
+- Three same-code source label variants were observed: two compatible 2012 wording expansions and one 2022 revision-boundary conflict. The 2022 conflict was resolved automatically against the adjacent 2021/2023 annual editions; unresolved duplicate-label reviews: 0.
+- Full test suite currently passes: 33 tests.
 
 ## Pending live work
 
@@ -105,4 +106,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Stage 9 is complete. Stage 10 source discovery, parser design, and one-chapter live validation are complete. The next long-running action is the full official CLIP HSK reference collection for 2012–2026 using `run_hsk_reference.ps1` (roughly one detail request per HS chapter per year, with gzip cache/resume). `HSK-YYYY` denotes the official CLIP annual edition and intentionally does not claim unsupported sub-annual legal validity boundaries. After the annual reference is complete and validated, proceed to stage 11 full normalization/reconciliation, including all **269 × 175 months = 47,075 country-month source assignments** and the residual policy in `DATA_MODEL.md`.
+Stages 9 and 10 are complete. Stage 11 now rebuilds the full normalized fact set from all **269 × 175 months = 47,075 country-month source assignments**, validates annual HSK revision coverage, produces HS8/HS6/HS4/HS2 analyst tables under the residual policy in `DATA_MODEL.md`, and reconciles stored facts/exceptions against independent official totals where practical.

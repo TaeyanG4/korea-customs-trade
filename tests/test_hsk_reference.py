@@ -1,6 +1,14 @@
 import pytest
+import pyarrow as pa
+import pyarrow.parquet as pq
 
-from hsk_reference import YearIndex, parse_chapter_html, parse_year_index
+from hsk_reference import (
+    SCHEMA,
+    YearIndex,
+    parse_chapter_html,
+    parse_year_index,
+    review_duplicate_name_variants,
+)
 
 
 INDEX_HTML = """
@@ -113,3 +121,58 @@ def test_parse_chapter_preserves_contradictory_duplicate_label_for_review():
     assert rows[0]["name_en"] == "Other"
     assert len(audit) == 1
     assert audit[0]["resolution"] == "prefer_first_source_order_pending_adjacent_year_review"
+
+
+def test_adjacent_year_review_can_rewrite_transition_year(tmp_path):
+    code = "6815910000"
+
+    def row(year, ko, en):
+        return {
+            "reference_year": year,
+            "hs_revision": f"HSK-{year}",
+            "valid_from": f"{year}-01-01",
+            "valid_to": f"{year}-12-31",
+            "clip_sct_year": f"{year}0101",
+            "clip_hstd_year": f"{year}0101",
+            "hs10": code,
+            "hs8": code[:8],
+            "hs6": code[:6],
+            "hs4": code[:4],
+            "hs2": code[:2],
+            "name_ko": ko,
+            "name_en": en,
+            "source": "test",
+            "source_url": "https://example.test",
+        }
+
+    old = ("구 정의", "Old definition")
+    new = ("신 정의", "New definition")
+    for year, names in [(2021, old), (2022, old), (2023, new)]:
+        d = tmp_path / f"year={year}"
+        d.mkdir()
+        pq.write_table(pa.Table.from_pylist([row(year, *names)], schema=SCHEMA), d / "hsk10.parquet")
+
+    stats = [
+        {
+            "year": 2022,
+            "duplicate_name_variants": [
+                {
+                    "hs10": code,
+                    "first_source_name_ko": old[0],
+                    "first_source_name_en": old[1],
+                    "second_source_name_ko": new[0],
+                    "second_source_name_en": new[1],
+                    "selected_name_ko": old[0],
+                    "selected_name_en": old[1],
+                    "resolution": "prefer_first_source_order_pending_adjacent_year_review",
+                }
+            ],
+        }
+    ]
+    result = review_duplicate_name_variants(stats, tmp_path)
+    assert result == {"reviewed": 1, "resolved": 1, "unresolved": 0, "annual_name_rewrites": 1}
+    reviewed = stats[0]["duplicate_name_variants"][0]
+    assert reviewed["resolution"] == "adjacent_year_validated_revision_transition_second_is_current"
+    table = pq.ParquetFile(tmp_path / "year=2022" / "hsk10.parquet").read()
+    assert table["name_ko"].to_pylist() == [new[0]]
+    assert table["name_en"].to_pylist() == [new[1]]

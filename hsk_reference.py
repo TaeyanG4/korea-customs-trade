@@ -165,6 +165,10 @@ def resolve_duplicate_row(
                 "name_en_variants": sorted(
                     {x for x in [previous.get("name_en"), current.get("name_en")] if x}
                 ),
+                "first_source_name_ko": previous.get("name_ko"),
+                "first_source_name_en": previous.get("name_en"),
+                "second_source_name_ko": current.get("name_ko"),
+                "second_source_name_en": current.get("name_en"),
                 "selected_name_ko": selected.get("name_ko"),
                 "selected_name_en": selected.get("name_en"),
                 "resolution": (
@@ -405,6 +409,104 @@ def collect_year(
     }
 
 
+def annual_name_map(output_root: Path, year: int) -> dict[str, tuple[str | None, str | None]]:
+    path = output_root / f"year={year}" / "hsk10.parquet"
+    if not path.exists():
+        return {}
+    table = pq.ParquetFile(path).read(columns=["hs10", "name_ko", "name_en"])
+    return {
+        code: (ko, en)
+        for code, ko, en in zip(
+            table["hs10"].to_pylist(),
+            table["name_ko"].to_pylist(),
+            table["name_en"].to_pylist(),
+        )
+    }
+
+
+def rewrite_annual_name(
+    output_root: Path,
+    year: int,
+    hs10: str,
+    name_ko: str | None,
+    name_en: str | None,
+) -> None:
+    path = output_root / f"year={year}" / "hsk10.parquet"
+    table = pq.ParquetFile(path).read()
+    rows = table.to_pylist()
+    matched = 0
+    for row in rows:
+        if row["hs10"] == hs10:
+            row["name_ko"] = name_ko
+            row["name_en"] = name_en
+            matched += 1
+    if matched != 1:
+        raise RuntimeError(f"expected one {year}:{hs10} row while reviewing duplicate labels, got {matched}")
+    pq.write_table(
+        pa.Table.from_pylist(rows, schema=SCHEMA),
+        path,
+        compression="zstd",
+        compression_level=6,
+        use_dictionary=True,
+    )
+
+
+def review_duplicate_name_variants(
+    year_stats: list[dict[str, Any]],
+    output_root: Path,
+) -> dict[str, Any]:
+    """Resolve pending same-code label conflicts using adjacent annual editions."""
+    maps: dict[int, dict[str, tuple[str | None, str | None]]] = {}
+
+    def names(year: int, code: str) -> tuple[str | None, str | None] | None:
+        if year not in maps:
+            maps[year] = annual_name_map(output_root, year)
+        return maps[year].get(code)
+
+    reviewed = 0
+    resolved = 0
+    unresolved = 0
+    rewrites = 0
+    for stat in year_stats:
+        year = int(stat["year"])
+        for variant in stat.get("duplicate_name_variants", []):
+            if variant.get("resolution") != "prefer_first_source_order_pending_adjacent_year_review":
+                continue
+            reviewed += 1
+            code = variant["hs10"]
+            first = (variant.get("first_source_name_ko"), variant.get("first_source_name_en"))
+            second = (variant.get("second_source_name_ko"), variant.get("second_source_name_en"))
+            prev_names = names(year - 1, code)
+            next_names = names(year + 1, code)
+
+            if prev_names == second and next_names == first:
+                variant["resolution"] = "adjacent_year_validated_revision_transition_first_is_current"
+                variant["adjacent_previous"] = list(prev_names)
+                variant["adjacent_next"] = list(next_names)
+                resolved += 1
+            elif prev_names == first and next_names == second:
+                rewrite_annual_name(output_root, year, code, second[0], second[1])
+                maps.pop(year, None)
+                variant["selected_name_ko"] = second[0]
+                variant["selected_name_en"] = second[1]
+                variant["resolution"] = "adjacent_year_validated_revision_transition_second_is_current"
+                variant["adjacent_previous"] = list(prev_names)
+                variant["adjacent_next"] = list(next_names)
+                resolved += 1
+                rewrites += 1
+            else:
+                variant["adjacent_previous"] = list(prev_names) if prev_names else None
+                variant["adjacent_next"] = list(next_names) if next_names else None
+                variant["resolution"] = "unresolved_conflicting_label_after_adjacent_year_review"
+                unresolved += 1
+    return {
+        "reviewed": reviewed,
+        "resolved": resolved,
+        "unresolved": unresolved,
+        "annual_name_rewrites": rewrites,
+    }
+
+
 def combine_annual(output_root: Path, years: Iterable[int], combined_path: Path) -> dict[str, Any]:
     tables = []
     counts: dict[str, int] = {}
@@ -412,7 +514,11 @@ def combine_annual(output_root: Path, years: Iterable[int], combined_path: Path)
         path = output_root / f"year={year}" / "hsk10.parquet"
         if not path.exists():
             raise RuntimeError(f"missing annual HSK reference: {path}")
-        table = pq.read_table(path)
+        # Read the physical Parquet file directly. ``pq.read_table`` treats a
+        # path under ``year=YYYY`` as a Hive-partitioned dataset and injects a
+        # synthetic ``year`` column, which is not part of the HSK reference
+        # schema.
+        table = pq.ParquetFile(path).read()
         if not table.schema.equals(SCHEMA, check_metadata=False):
             raise RuntimeError(f"unexpected HSK reference schema: {path}")
         tables.append(table)
@@ -489,6 +595,11 @@ def main() -> int:
         year_stats.append(
             collect_year(year, source_root, output_root, args.force, args.sleep)
         )
+    duplicate_review = review_duplicate_name_variants(year_stats, output_root)
+    if duplicate_review["unresolved"]:
+        raise RuntimeError(
+            f"unresolved HSK duplicate-label reviews: {duplicate_review['unresolved']}"
+        )
     combined = combine_annual(output_root, years, combined_path)
     manifest = {
         "generated_at": utc_now(),
@@ -500,6 +611,7 @@ def main() -> int:
         ),
         "years": years,
         "year_stats": year_stats,
+        "duplicate_name_review": duplicate_review,
         "combined": combined,
         "elapsed_seconds": round(time.monotonic() - t0, 3),
     }

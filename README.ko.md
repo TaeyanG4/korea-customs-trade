@@ -14,7 +14,7 @@
 
 ## 현재 단계
 
-API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill까지 완료했고 현재는 관세청 CLIP의 공식 연도별 관세율표로 **revision-aware HSK reference dimension**을 구축하는 단계입니다. 최초 핵심 가정은 다음이었습니다.
+API pilot, 국가코드 검증, production collector, normalization pipeline, full historical backfill, 공식 연도별 HSK reference 수집까지 완료했고 현재는 **reconciliation 및 release QA 단계**입니다. 최초 핵심 가정은 다음이었습니다.
 
 > `cntyCd`와 조회기간만 지정하고 `hsSgn`을 생략했을 때, 해당 국가의 월별 전체 HSK10 거래 row가 반환되는가?
 
@@ -27,7 +27,7 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 ### 로드맵 진행 상황
 
-현재 단계는 **10/12 — revision-aware HSK dimension 구축**입니다. 1~9단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. production collector와 revision-safe normalization은 전체 rebuild 준비가 끝난 상태입니다.
+현재 단계는 **11/12 — reconciliation 및 release QA**입니다. 1~10단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. 공식 CLIP 2012–2026 연도별 HSK reference는 총 178,911 annual HSK10 rows이며 국문/영문 품명 누락과 미해결 duplicate-label review가 없습니다.
 
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
 
@@ -52,7 +52,7 @@ python .\hsk_reference.py probe --year 2022 --chapter 01
 .\run_hsk_reference.ps1
 ```
 
-첫 live probe는 2022년 제1류에서 HSK10 69개를 추출했고 국문명/영문명 누락은 모두 0이었습니다. 전체 수집은 오래 걸릴 수 있으므로 사용자 직접 실행 작업으로 둡니다. `HSK-YYYY`는 CLIP의 **공식 연도판**을 의미하며, 연도 선택 화면에서 확인할 수 없는 연중 법적 개정 경계를 임의 추정하지 않습니다.
+첫 live probe는 2022년 제1류에서 HSK10 69개를 추출했고 국문명/영문명 누락은 모두 0이었습니다. 2012–2026 전체 수집도 완료되어 178,911 annual HSK10 rows, 국문명 누락 0, 영문명 누락 0, annual key 중복 0, prefix mismatch 0을 확인했습니다. 동일 코드 명칭 variant는 3건만 관측됐고, 2012년 2건은 더 구체적인 compatible wording을 선택했으며 2022년 revision-boundary 1건은 2021/2023 인접 연도와 자동 비교해 해결했습니다. `HSK-YYYY`는 CLIP의 **공식 연도판**을 의미하며, 연도 선택 화면에서 확인할 수 없는 연중 법적 개정 경계를 임의 추정하지 않습니다.
 
 ## Production collector
 
