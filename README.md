@@ -4,6 +4,8 @@
 
 [한국어 README](README.ko.md)
 
+[Data model / release architecture](DATA_MODEL.md)
+
 This repository builds a reproducible Kaggle data product from official Korea Customs Service public data. The intended source-of-truth grain is:
 
 `month × partner_country × HSK10`
@@ -25,7 +27,7 @@ No full crawl should begin until this pilot passes.
 
 ### Roadmap progress
 
-Current stage: **9/12 — full historical backfill**. Stages 1–8 are complete. The production collector schedules all 269 official KCS codes, and a revision-safe normalization pipeline converts the selected latest raw source for every `(country, month)` into strict HSK10 Parquet.
+Current stage: **10/12 — revision-aware HSK dimension**. Stages 1–9 are complete. The full historical backfill completed 4,035/4,035 scheduled country-year roots with 0 unresolved failures and 22,351,483 collected fact rows. The production collector and revision-safe normalization pipeline are ready for a full rebuild.
 
 The matrix also exposed a small but important upstream data-quality exception: 5 of 1,379,734 fact rows were not 10-digit HSK (four 6-digit rows and one 9-digit row). These rows were reproduced by targeted API checks, so they are not parser errors. They are preserved in raw XML and quarantined to `non_hs10_rows.csv`; the canonical HSK10 fact table will never pad or guess them into a 10-digit code.
 
@@ -228,7 +230,7 @@ hs_revision
 
 Normalization resolves overlapping raw requests by choosing the latest successful manifest independently for every `(country, month)`. This is important for monthly revision refreshes: an older row can disappear in a newer source and will then disappear from the rebuilt normalized dataset rather than surviving as a stale append-only record.
 
-HS6/HS4/HS2 output is aggregated **only from canonical HSK10 Parquet**. The lower-level KCS API is never queried to create these derived facts. HSK names and country names live in reference/dimension data rather than repeat across the fact table wherever possible.
+The durable release architecture is documented in [`DATA_MODEL.md`](DATA_MODEL.md). The target analyst-facing release provides separate HS2/HS4/HS6/HS8/HSK10 grains. Canonical HSK10 remains strict numeric 10-digit source data; shorter upstream codes are quarantined and are never padded or guessed. Residual-aware aggregation may incorporate an exception only at hierarchy levels that its observed prefix identifies without inference.
 
 ## Dataset positioning
 

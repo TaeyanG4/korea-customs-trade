@@ -4,6 +4,8 @@
 
 [English README](README.md)
 
+[데이터 모델 / 릴리스 구조](DATA_MODEL.ko.md)
+
 이 저장소는 관세청 공식 공공데이터를 기반으로 재현 가능하고 업데이트 가능한 Kaggle 데이터 제품을 구축하기 위한 프로젝트입니다. 최종 Source of Truth의 grain은 다음과 같습니다.
 
 `month × partner_country × HSK10`
@@ -25,7 +27,7 @@ API pilot, 국가코드 검증, production collector, normalization pipeline까�
 
 ### 로드맵 진행 상황
 
-현재 단계는 **9/12 — full historical backfill**입니다. 1~8단계는 완료했습니다. production collector는 공식 KCS 269개 코드를 scheduling하고, revision-safe normalization은 각 `(country, month)`마다 가장 최신의 성공 raw source 1개만 선택해 strict HSK10 Parquet을 생성합니다.
+현재 단계는 **10/12 — revision-aware HSK dimension 구축**입니다. 1~9단계는 완료했습니다. full historical backfill은 4,035/4,035 country-year root가 전부 성공했고 unresolved failure는 0이며 총 22,351,483 fact rows를 수집했습니다. production collector와 revision-safe normalization은 전체 rebuild 준비가 끝난 상태입니다.
 
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.
 
@@ -224,7 +226,7 @@ hs_revision
 
 Normalization은 raw 요청이 겹쳐도 `(country, month)`별로 가장 최근 성공 manifest를 1개만 선택합니다. 따라서 월간 revision refresh에서 과거 row가 삭제된 경우에도 append-only stale row가 남지 않고 전체 rebuild 시 정상적으로 사라집니다.
 
-HS6/HS4/HS2는 **canonical HSK10 Parquet만 로컬 집계**해 생성하며 lower-level 관세청 API를 별도로 호출하지 않습니다. 국가명과 긴 품목명은 가능한 한 fact table에서 반복하지 않고 reference/dimension으로 분리합니다.
+장기 데이터 제품 구조는 [`DATA_MODEL.ko.md`](DATA_MODEL.ko.md)에 고정해 두었습니다. 최종 분석가용 release는 HS2/HS4/HS6/HS8/HSK10 grain을 서로 분리해 제공합니다. Canonical HSK10은 숫자형 정확한 10자리만 유지하고 짧은 upstream code는 별도 quarantine하며 절대 padding/추정하지 않습니다. Residual-aware aggregate는 관측 prefix만으로 정확히 식별 가능한 hierarchy level에만 예외 금액을 포함합니다.
 
 ## Kaggle 포지셔닝
 

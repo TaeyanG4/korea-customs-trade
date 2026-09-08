@@ -4,7 +4,7 @@ Last updated: 2026-09-08
 
 ## Roadmap progress
 
-Current stage: **9/12 — full historical backfill**
+Current stage: **10/12 — revision-aware HSK dimension**
 
 1. Project status / README refresh for the active API key
 2. US x 2025 full-year pilot with `hsSgn` omitted
@@ -63,6 +63,8 @@ Current stage: **9/12 — full historical backfill**
 - Sample HSK10 Parquet size: 36,000,067 bytes (~20.5 bytes/input row), normalized in about 33 seconds.
 - HS6/HS4/HS2 are derived locally from HSK10 only; aggregate totals reconcile exactly to HSK10 for all monetary/weight measures.
 - Current derived sample: HS6 1,091,103 rows / 21.84 MB; HS4 353,003 / 7.68 MB; HS2 39,934 / 1.06 MB.
+- Full historical backfill completed: 4,035/4,035 scheduled roots succeeded, 22,351,483 fact rows collected, 343 successful checkpoints reused, 0 unresolved failures.
+- Durable analyst-facing data model is documented in `DATA_MODEL.md` / `DATA_MODEL.ko.md`: separate HS2/HS4/HS6/HS8/HSK10 files, strict HSK10 canonical grain, non-HSK10 quarantine, and residual-aware upper-level aggregation without guessing.
 
 ## Pending live work
 
@@ -99,4 +101,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Next action: run the full 4,035-root historical collection through 2026-07, preserving checkpoints and stopping safely if the API quota or permission state changes. After collection, rebuild normalization with `--require-full-coverage` so all **269 × 175 months = 47,075 country-month source assignments** are present before stage 10.
+Stage 9 is complete. Next action: build the revision-aware HSK dimension from official historical HSK sources where available. After the dimension policy is established, rebuild normalization with `--require-full-coverage` so all **269 × 175 months = 47,075 country-month source assignments** are present, then regenerate analyst-facing HS2/HS4/HS6/HS8/HSK10 outputs under the residual policy in `DATA_MODEL.md`.
