@@ -32,18 +32,18 @@ Can a compact machine-learning model improve on simple time-series baselines for
 
 This notebook builds a **leakage-aware monthly forecasting benchmark** from the South Korea Customs Trade Dataset:
 
-1. select the top 100 HS6 import groups using **training-period data only**,  
-2. aggregate monthly imports over a consistent geographic-partner universe,  
-3. create lag and rolling features using only information available before each target month,  
-4. hold out the latest 12 complete months, and  
+1. select the top 100 HS6 import groups using **training-period data only**,
+2. aggregate monthly imports over a consistent geographic-partner universe,
+3. create lag and rolling features using only information available before each target month,
+4. hold out the latest 12 complete months, and
 5. compare a `HistGradientBoostingRegressor` against two strong baselines:
    - previous month (`lag-1`), and
    - same month one year earlier (`seasonal naive`, lag-12).
 
 The goal is not to claim that ML always wins. A useful benchmark should show **how much** it helps, and when a simple rule remains hard to beat.
 
-**Source:** Korea Customs Service public data.  
-**Forecast target:** monthly import value in USD for each selected HS6 code.  
+**Source:** Korea Customs Service public data.
+**Forecast target:** monthly import value in USD for each selected HS6 code.
 **Analytical partner universe:** current UN geographic matches plus `TW`, excluding `KR` and KCS special/aggregate codes.
 """
         ),
@@ -513,10 +513,10 @@ next_features.nlargest(20, "forecast_import_usd")[["hs6", "forecast_import_usd_b
 
 ### Next experiments
 
-1. rolling-origin cross-validation instead of a single 12-month holdout,  
-2. separate models by HS2/industry family,  
-3. add commodity prices and FX rates from properly licensed external sources,  
-4. forecast partner-level imports rather than national HS6 aggregates, and  
+1. rolling-origin cross-validation instead of a single 12-month holdout,
+2. separate models by HS2/industry family,
+3. add commodity prices and FX rates from properly licensed external sources,
+4. forecast partner-level imports rather than national HS6 aggregates, and
 5. compare tree models with classical ETS/ARIMA models on the same split.
 """
         ),

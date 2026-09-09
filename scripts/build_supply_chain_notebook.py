@@ -41,7 +41,7 @@ We calculate four transparent metrics for every imported HSK10 product:
 
 The analysis is a **customs import-partner concentration proxy**. It does not identify firm-level suppliers, inventories, contractual substitutability, or ultimate country of origin.
 
-**Source:** Korea Customs Service public data.  
+**Source:** Korea Customs Service public data.
 **Analytical grain:** `month x partner country x HSK10`.
 """
         ),
@@ -406,9 +406,9 @@ This screen is useful for finding **where to investigate next**, not for declari
 
 Good follow-up projects include:
 
-1. tracking HHI changes through time to detect **rising concentration**,  
-2. comparing import concentration with export-market concentration,  
-3. building an HS6 forecasting benchmark, and  
+1. tracking HHI changes through time to detect **rising concentration**,
+2. comparing import concentration with export-market concentration,
+3. building an HS6 forecasting benchmark, and
 4. drilling from a concentrated HS6 category into the underlying Korean HSK10 details.
 """
         ),
