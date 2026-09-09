@@ -2,3 +2,4 @@ requests>=2.31,<3
 pytest>=8,<9
 beautifulsoup4>=4.12,<5
 pyarrow>=18,<22
+Pillow>=11,<12
