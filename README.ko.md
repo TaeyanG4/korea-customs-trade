@@ -31,6 +31,8 @@ API pilot, 국가코드 검증, production collector, normalization pipeline, fu
 
 Kaggle Dataset `taeyangg4/south-korea-customs-trade-hsk10`은 현재 **Public**이며 Version 2가 `Ready`, 관측 Usability는 **10.00/10**입니다. Public starter Notebook `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`는 Version 3까지 Kaggle runtime에서 정상 완료됐고 Dataset mount auto-discovery, traceback 없음, 한글 glyph warning 없음까지 확인했습니다. Kaggle Usability 세부값을 직접 확인한 결과 file description과 column description을 포함한 모든 score component가 `1`입니다.
 
+추가 Public 분석 프로젝트도 두 개 공개했습니다. `taeyangg4/korea-import-dependency-hsk10-supply-chain`은 Version 2가 `COMPLETE`이며 최근 12개월 HSK10 수입을 대상으로 Top-1/Top-3 partner share, HHI, concentration-weighted import exposure를 계산합니다. `taeyangg4/forecast-korea-imports-hs6-ml-vs-naive`는 Version 3가 `COMPLETE`이며 training 기간만으로 선정한 상위 100개 HS6에 대해 시간 누수 없는 머신러닝 benchmark를 수행합니다. 현재 2025-08~2026-07 holdout에서 Huber loss Gradient Boosting은 WAPE를 **seasonal naive 대비 34.0%**, **lag-1 persistence 대비 8.4%** 개선했고, 전체 가용 월로 재학습한 뒤 2026-08 one-step-ahead forecast도 생성합니다. 이 benchmark 수치는 현재 Dataset version 기준이므로 향후 월간 refresh 뒤에는 자연스럽게 달라질 수 있습니다.
+
 최종 제품 목표는 **Kaggle Usability 10.00 + Dataset medal**입니다. 원천 데이터를 과도하게 정제하지 않고, 공식성·재현성·분석 편의성·문서화·지속 업데이트·한글 무결성을 중심으로 완성도를 높입니다.
 
 다만 matrix에서 중요한 원천 데이터 예외를 확인했습니다. 1,379,734개 fact row 중 5개가 10자리가 아니었으며, 6자리 4건과 9자리 1건입니다. 해당 코드를 별도 API 조회해도 동일하게 재현되어 파서 오류가 아니라 upstream API/원천 데이터 예외로 확인했습니다. 이 row들은 raw XML과 `non_hs10_rows.csv`에 그대로 보존하며, canonical HSK10에는 절대 zero-padding하거나 추정 매핑하지 않습니다.

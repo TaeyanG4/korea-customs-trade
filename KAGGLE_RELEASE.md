@@ -30,17 +30,23 @@ The output is written to `release/kaggle/` and is intentionally ignored by Git.
 
 ## Public release status
 
-The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-first release was validated before publication, and the Dataset and starter Notebook are now public.
+The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-first release was validated before publication, and the Dataset plus three associated Notebooks are now public.
 
 - Dataset Version 2: `Ready`
 - Visibility: **Public**
 - Current Usability: **10.00/10** (`1.0`)
+- Public associated Notebook count: **3**
 - Update frequency: monthly
 - Cover image: present
 - Live-valid tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, `international relations`
 - Starter Notebook: `taeyangg4/south-korea-trade-in-5-minutes-hs6-quickstart`
 - Notebook Version 3: `COMPLETE` in Kaggle runtime
 - Notebook visibility: **Public**
+- Supply-chain Notebook: `taeyangg4/korea-import-dependency-hsk10-supply-chain`
+- Supply-chain Notebook Version 2: `COMPLETE`, **Public**
+- ML forecast Notebook: `taeyangg4/forecast-korea-imports-hs6-ml-vs-naive`
+- ML forecast Notebook Version 3: `COMPLETE`, **Public**
+- Current ML holdout: `202508` through `202607`; Huber Gradient Boosting WAPE improves **34.0% vs seasonal naive** and **8.4% vs lag-1 persistence**
 
 The guarded upload wrapper remains the reproducible path for future private version uploads. It verifies the release QA result, release manifest, and dataset ID before invoking Kaggle and deliberately does **not** add `--public`.
 
@@ -86,3 +92,5 @@ Independent post-write verification reports:
 - final `score = 1.0` = **10.00/10**
 
 The Usability milestone is therefore complete. Future work should preserve this metadata during monthly releases and focus on Dataset-medal discovery, sustained updates, notebook usefulness, and community adoption instead of further score chasing.
+
+The two deeper public examples broaden the Dataset beyond a quickstart: the HSK10 supply-chain Notebook demonstrates partner-concentration research at Korean national-product detail, while the HS6 ML Notebook demonstrates leakage-aware forecasting with strong naive baselines and a reproducible temporal holdout. Future Dataset refreshes should rerun these Notebooks so their rolling windows and benchmark outputs stay aligned with the latest stable month.

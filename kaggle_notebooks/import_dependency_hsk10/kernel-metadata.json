@@ -1,0 +1,18 @@
+{
+  "id": "taeyangg4/korea-import-dependency-hsk10-supply-chain",
+  "title": "Korea Import Dependency - HSK10 Supply Chain",
+  "code_file": "korea_import_dependency_hsk10.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "machine_shape": "",
+  "dataset_sources": [
+    "taeyangg4/south-korea-customs-trade-hsk10"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
