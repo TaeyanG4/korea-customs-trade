@@ -34,7 +34,7 @@ The target handle is `taeyangg4/south-korea-customs-trade-hsk10`. The private-fi
 
 - Dataset Version 2: `Ready`
 - Visibility: **Public**
-- Current Usability: **8.24/10** (`0.8235294`)
+- Current Usability: **10.00/10** (`1.0`)
 - Update frequency: monthly
 - Cover image: present
 - Live-valid tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, `international relations`
@@ -74,15 +74,15 @@ The concise HS6 starter Notebook is public and validated:
 
 **South Korea Trade in 5 Minutes — HS6 Quickstart**
 
-The public Notebook raised the Dataset from the private-first score, and direct Kaggle usability inspection now identifies only two remaining components:
+The public Notebook raised the Dataset from the private-first score. The final remaining gap was the Data Viewer metadata store: local release metadata already contained descriptions for all 16 files and all 158 represented columns, but token-authenticated CLI/MCP metadata updates did not persist those two scoring components in this environment.
 
-- `fileDescriptionScore = 0`
-- `columnDescriptionScore = 0`
+The descriptions were finally persisted through Kaggle's authenticated same-origin Data Viewer update endpoint from the user's logged-in Dataset page. All 16 files completed successfully and all 158 column descriptions were written while preserving Kaggle's server-inferred column types.
 
-Every other Usability component is `1`. Local release metadata already contains descriptions for all 16 files and all 158 represented columns. Kaggle CLI 2.2.4 sends those descriptions correctly, but live OAuth metadata updates do not persist them into Data Viewer v3. A fresh tiny probe Dataset reproduced the same behavior, so this is not evidence that the 1.19 GB trade package needs another blind upload.
+Independent post-write verification reports:
 
-The remaining sequence is therefore:
+- `fileDescriptionScore = 1`
+- `columnDescriptionScore = 1`
+- every other Usability component = `1`
+- final `score = 1.0` = **10.00/10**
 
-1. Persist all file and column descriptions into Kaggle's Data Viewer metadata store using a supported authenticated path.
-2. Re-check `fileDescriptionScore=1`, `columnDescriptionScore=1`, and final `score=1.0`.
-3. Only after the score is verified at 10.00, treat the Usability milestone as complete and shift focus to sustained updates and Dataset-medal discovery/quality work.
+The Usability milestone is therefore complete. Future work should preserve this metadata during monthly releases and focus on Dataset-medal discovery, sustained updates, notebook usefulness, and community adoption instead of further score chasing.

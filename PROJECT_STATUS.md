@@ -4,7 +4,7 @@ Last updated: 2026-09-09
 
 ## Roadmap progress
 
-Current stage: **12/12 — public Kaggle release live; Usability 10.00 follow-up in progress**
+Current stage: **12/12 — public Kaggle release live; Usability 10.00 achieved**
 
 Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleaning; preserve official source truth and prioritize analyst usability, documentation, reproducibility, and encoding-safe release files.
 
@@ -89,8 +89,8 @@ Release objective: **Kaggle Usability 10.00 + Dataset medal**. Avoid over-cleani
 - A release-folder secret/path scan found no `serviceKey`, `KCS_SERVICE_KEY`, `.env`, or local project absolute path strings in upload-facing text/CSV/JSON files.
 - Both Git Bash and PowerShell private-upload wrappers passed their `--preflight-only` / `-PreflightOnly` checks on 2026-09-09. The private-first validation completed successfully; Dataset Version 2 has a cover image, monthly update frequency, and seven live-valid discovery tags: `business`, `tabular`, `economics`, `time series analysis`, `government`, `asia`, and `international relations`.
 - The Dataset and starter Notebook were subsequently published. Notebook Version 3 is public, completed successfully in Kaggle runtime, auto-discovers the mounted Dataset under `/kaggle/input`, and has no traceback or Korean glyph warning.
-- Public Dataset Usability is currently **0.8235294 (8.24/10)**. Direct `DatasetDetailService/GetDatasetUsabilityRating` inspection isolates the entire residual gap to `fileDescriptionScore=0` and `columnDescriptionScore=0`; cover image, file format, license, overview, provenance, public Notebook, subtitle, tags, and update frequency all score `1`.
-- The release metadata itself is complete: all 16 upload files have non-empty descriptions and all 158 tabular fields represented in `dataset-metadata.json` have non-empty descriptions. Kaggle CLI 2.2.4 serializes these entries into `settings.data` correctly, but live OAuth `datasets metadata --update` and a fresh tiny probe Dataset both fail to persist them into the Data Viewer v3 metadata store. The Data Viewer write endpoint requires a logged-in web session and rejects OAuth bearer tokens; browser/computer-use automation is intentionally not used for this project.
+- Public Dataset Usability is now **1.0 (10.00/10)**. Direct `DatasetDetailService/GetDatasetUsabilityRating` verification reports every component at `1`, including `fileDescriptionScore=1` and `columnDescriptionScore=1` alongside cover image, file format, license, overview, provenance, public Notebook, subtitle, tags, and update frequency.
+- The release metadata contains descriptions for all 16 upload files and all 158 represented tabular columns. Kaggle CLI 2.2.4 and the official Kaggle MCP `update_dataset_metadata` path both accepted/read the metadata model but did not persist the Data Viewer descriptions through token-authenticated writes in this environment. The final successful persistence was performed once from the user's already authenticated Kaggle page using Kaggle's same-origin `UpdateDatabundleMetadataExternal` endpoint; all 16 file updates completed and the 158 column descriptions were preserved with the server-inferred column types.
 
 ## Live validation record
 
@@ -127,4 +127,4 @@ The production root-request count is now based on the official code list: **269 
 
 Stage 8 is complete. The real-data sample measured roughly **20.5 HSK10 Parquet bytes per input row**. Applying the 22–35 million row planning band gives a provisional HSK10 Parquet range of roughly **451–717 MB**. Including measured HS6/HS4/HS2 derived outputs gives a combined partitioned Parquet estimate of roughly **0.83–1.33 GB** before release-packaging overhead.
 
-Stages 9, 10, and 11 are complete. Stage 12 has completed package build, private-first validation, public Dataset publication, and public starter-Notebook publication. The remaining release-quality task is to close the Data Viewer file/column description gap and verify **Usability 10.00** rather than assuming it from local metadata.
+Stages 9, 10, and 11 are complete. Stage 12 has completed package build, private-first validation, public Dataset publication, public starter-Notebook publication, Data Viewer file/column metadata persistence, and independent verification of **Usability 10.00**. The release-quality focus now shifts to sustained monthly refreshes and Dataset-medal discovery/engagement rather than further usability-score work.
