@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "korea_customs_trade_scenic_source.png"
 ASSET = ROOT / "assets" / "korea_customs_trade_kaggle_banner.jpg"
+README_ASSET = ROOT / "assets" / "korea_customs_trade_readme_banner.jpg"
 RELEASE = ROOT / "release" / "kaggle" / "dataset-cover-image.jpg"
 CARD_PREVIEW = ROOT / "kaggle_card_preview.jpg"
 COVER_PREVIEW = ROOT / "kaggle_cover_preview.jpg"
@@ -48,6 +49,14 @@ draw.text((left, 199), "269 partner codes", font=font_fact, fill=(205, 226, 240)
 draw.rounded_rectangle((left, 230, left + 188, 235), radius=2, fill=(54, 177, 255))
 draw.rounded_rectangle((left + 188, 230, left + 230, 235), radius=2, fill=(238, 69, 92))
 
+# GitHub README should display a real 2:1 banner. Keep this separate from the
+# legacy Kaggle upload canvas below, which exists only to preserve Kaggle's
+# historical crop coordinates for this Dataset.
+README_ASSET.parent.mkdir(parents=True, exist_ok=True)
+cover.resize((1200, 600), Image.Resampling.LANCZOS).save(
+    README_ASSET, "JPEG", quality=92, optimize=True, progressive=True
+)
+
 master = Image.new("RGB", (1200, 1200), (8, 31, 52))
 background = scene.resize((1200, 1200), Image.Resampling.LANCZOS)
 background = background.filter(ImageFilter.GaussianBlur(30))
@@ -67,5 +76,6 @@ master.crop((0, 0, 550, 275)).resize(
 ).save(COVER_PREVIEW, "JPEG", quality=92)
 
 print("asset", Image.open(ASSET).size, ASSET.stat().st_size)
+print("readme_asset", Image.open(README_ASSET).size, README_ASSET.stat().st_size)
 print("card_preview", CARD_PREVIEW)
 print("cover_preview", COVER_PREVIEW)

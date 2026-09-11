@@ -1,8 +1,8 @@
 # South Korea Customs Trade 2012–2026 — 10-Digit Product Level
 
-![Korea Customs Trade Kaggle banner](assets/korea_customs_trade_kaggle_banner.jpg)
+[English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
-[한국어 README](README.ko.md)
+![Korea Customs Trade banner](assets/korea_customs_trade_readme_banner.jpg)
 
 [Data model / release architecture](DATA_MODEL.md)
 

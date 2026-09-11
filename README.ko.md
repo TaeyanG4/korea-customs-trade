@@ -1,8 +1,8 @@
 # 한국 관세 수출입 2012–2026 — HSK 10자리 상품 수준
 
-![Korea Customs Trade Kaggle banner](assets/korea_customs_trade_kaggle_banner.jpg)
+[English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
-[English README](README.md)
+![Korea Customs Trade banner](assets/korea_customs_trade_readme_banner.jpg)
 
 [데이터 모델 / 릴리스 구조](DATA_MODEL.ko.md)
 
@@ -182,6 +182,16 @@ collector는 프로세스 환경변수에 키가 없을 때 `.env`를 자동으�
 
 ```powershell
 .\run_matrix.ps1
+```
+
+## Linux / macOS 실행
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+export KCS_SERVICE_KEY='YOUR_DATA_GO_KR_SERVICE_KEY'
+./run_us_2025.sh
 ```
 
 ## 출력 구조
