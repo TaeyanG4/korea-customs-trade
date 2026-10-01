@@ -1,0 +1,928 @@
+{
+  "title": "South Korea Customs Trade 2012-2026 HSK10",
+  "subtitle": "Monthly trade by 269 partners and 10-digit Korean HSK products",
+  "description": "# South Korea Customs Trade 2012–2026 — 10-Digit Product Level\n\nMonthly South Korean customs trade with **269 partner country/territory codes** and full **10-digit Korean HSK product detail**, built reproducibly from official Korea Customs Service public data.\n\n## Why this dataset\n\nMost trade datasets stop at HS2, HS4, or HS6. This release keeps the full Korean HSK10 detail while also providing ready-to-use HS8, HS6, HS4, and HS2 monthly tables so you can choose the right grain without re-aggregating tens of millions of rows yourself.\n\nThe data covers **2012-01 through 2026-07** and is designed for trade-network analysis, supply-chain dependency research, industrial structure, product diversification, bilateral trade analysis, and forecasting.\n\n## What is included\n\n- `trade_hs10_monthly.parquet` — strict 10-digit HSK canonical facts\n- `trade_hs8_monthly.parquet` — Korean national-detail prefix aggregate\n- `trade_hs6_monthly.parquet` — recommended international-comparison table\n- `trade_hs4_monthly.parquet` — heading-level industry view\n- `trade_hs2_monthly.parquet` — chapter-level macro view\n- `trade_hs6_202607_sample.csv` — latest-month convenience sample for quick preview\n- annual HSK Korean/English reference, country reference, source-exception audits, release manifest, coverage report, data dictionary, methodology, and provenance\n\n## Quality and source fidelity\n\nThe collection completed **4,035 / 4,035 scheduled country-year roots** with zero unresolved API failures. Stage-11 normalization reconciled **22,351,483 source fact rows** into **22,351,430 strict HSK10 rows + 53 non-HSK10 source exceptions**. Duplicate canonical keys and partition mismatches are zero.\n\nRare source anomalies are **not silently cleaned away**. Non-HSK10 rows are quarantined instead of padded into invented HSK10 codes. Nineteen source rows with negative reported weight are preserved exactly and exposed as warnings. HSK10 trade facts missing from the same-year annual CLIP reference remain in the dataset with `hs_revision = null` and are audited rather than dropped.\n\nExports are reported in USD on an **FOB** basis, imports in USD on a **CIF/customs-value** basis, and weights are net kilograms as published by Korea Customs.\n\n## Recommended starting point\n\nFor most cross-country product analysis, start with **HS6**. Use **HSK10** when you need Korean product-level detail or supply-chain precision.\n\n```python\nimport pandas as pd\n\ndf = pd.read_parquet('/kaggle/input/south-korea-customs-trade-hsk10/trade_hs6_monthly.parquet')\nsemiconductors = df[df['hs6'].str.startswith('8542')]\n```\n\n## Updates\n\nThe intended update frequency is **monthly**. Refreshes re-fetch the latest stable month plus the preceding 12 months so customs revisions, withdrawals, and corrections can replace older values rather than accumulating stale append-only rows.\n\n## 한국어 요약\n\n관세청 공식 공공데이터를 기반으로 구축한 월별 국가 × 품목 수출입 데이터셋입니다. 2012년 1월부터 2026년 7월까지 269개 관세청 국가코드와 한국 HSK 10자리 품목을 Source of Truth로 보존하고, 분석 편의를 위해 HS8/HS6/HS4/HS2 집계 파일도 제공합니다. 원천의 예외값은 임의 수정하지 않고 별도 audit로 공개합니다.\n",
+  "id": "taeyangg4/south-korea-customs-trade-hsk10",
+  "isPrivate": false,
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "resources": [
+    {
+      "path": "country_reference.csv",
+      "description": "Official KCS partner-code reference enriched only by exact UN M49 matches.",
+      "schema": {
+        "fields": [
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service collection code used by the trade API.",
+            "type": "string"
+          },
+          {
+            "name": "country_name_ko",
+            "description": "Korean country/territory name from the official KCS lookup workbook.",
+            "type": "string"
+          },
+          {
+            "name": "country_name_en",
+            "description": "English name from UN M49 only when the KCS code exactly matches a current UN alpha-2 code.",
+            "type": "string"
+          },
+          {
+            "name": "un_m49",
+            "description": "UN M49 numeric code when an exact current match exists; blank otherwise.",
+            "type": "integer"
+          },
+          {
+            "name": "iso_alpha3",
+            "description": "ISO alpha-3 code from UN M49 when an exact current match exists; blank otherwise.",
+            "type": "string"
+          },
+          {
+            "name": "un_match_status",
+            "description": "Whether the KCS code matched UN M49 exactly.",
+            "type": "string"
+          },
+          {
+            "name": "kcs_source_version",
+            "description": "Version identifier of the official KCS lookup workbook.",
+            "type": "string"
+          },
+          {
+            "name": "kcs_source_row",
+            "description": "Source-row number in the KCS workbook for reproducibility.",
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    {
+      "path": "coverage_report.csv",
+      "description": "Machine-readable Stage-11 release QA metrics and pass/fail coverage checks.",
+      "schema": {
+        "fields": [
+          {
+            "name": "section",
+            "description": "QA section name.",
+            "type": "string"
+          },
+          {
+            "name": "metric",
+            "description": "QA metric name.",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "description": "Recorded QA metric value.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "DATA_DICTIONARY.md",
+      "description": "Human-readable field definitions and grain semantics."
+    },
+    {
+      "path": "hsk_code_reference.parquet",
+      "description": "Official annual 2012-2026 Korean HSK code reference built from Korea Customs Service CLIP, including Korean and English item names.",
+      "schema": {
+        "fields": [
+          {
+            "name": "reference_year",
+            "description": "Annual Korea Customs CLIP reference edition year.",
+            "type": "integer"
+          },
+          {
+            "name": "hs_revision",
+            "description": "Annual edition label HSK-YYYY.",
+            "type": "string"
+          },
+          {
+            "name": "valid_from",
+            "description": "Reference validity start recorded by the annual collector; annual-edition semantics only.",
+            "type": "string"
+          },
+          {
+            "name": "valid_to",
+            "description": "Reference validity end recorded by the annual collector; annual-edition semantics only.",
+            "type": "string"
+          },
+          {
+            "name": "clip_sct_year",
+            "description": "CLIP tariff-table year value returned by the official source.",
+            "type": "string"
+          },
+          {
+            "name": "clip_hstd_year",
+            "description": "CLIP HS standard year value returned by the official source.",
+            "type": "string"
+          },
+          {
+            "name": "hs10",
+            "description": "Exact numeric 10-digit Korean HSK code returned by the source API.",
+            "type": "string"
+          },
+          {
+            "name": "hs8",
+            "description": "First 8 digits of HSK10; Korean national-detail prefix, not an international HS level.",
+            "type": "string"
+          },
+          {
+            "name": "hs6",
+            "description": "First 6 digits of HSK10; international HS subheading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "name_ko",
+            "description": "Official Korean item name from the KCS CLIP annual tariff table.",
+            "type": "string"
+          },
+          {
+            "name": "name_en",
+            "description": "Official English item name from the KCS CLIP annual tariff table.",
+            "type": "string"
+          },
+          {
+            "name": "source",
+            "description": "Reference source identifier.",
+            "type": "string"
+          },
+          {
+            "name": "source_url",
+            "description": "Official source URL used to build the annual reference.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "hsk_reference_gaps.csv",
+      "description": "Annual HSK10 codes observed in trade facts but absent from the same-year CLIP reference. Facts remain present with null hs_revision.",
+      "schema": {
+        "fields": [
+          {
+            "name": "reference_year",
+            "description": "Annual KCS CLIP edition year used for matching.",
+            "type": "integer"
+          },
+          {
+            "name": "hs10",
+            "description": "Exact numeric 10-digit Korean HSK code returned by the source API.",
+            "type": "string"
+          },
+          {
+            "name": "fact_rows",
+            "description": "Number of canonical trade fact rows observed for this year/code combination.",
+            "type": "integer"
+          },
+          {
+            "name": "months",
+            "description": "Comma-separated YYYYMM months in which the code was observed.",
+            "type": "string"
+          },
+          {
+            "name": "name_ko_variants",
+            "description": "Korean source-name variants observed in the trade API for this year/code.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "METHODOLOGY.md",
+      "description": "Collection, normalization, residual, revision, reconciliation, and update methodology."
+    },
+    {
+      "path": "release_manifest.json",
+      "description": "Release inventory with file row counts, byte sizes, SHA-256 hashes, source coverage, and QA summary."
+    },
+    {
+      "path": "source_code_exceptions.parquet",
+      "description": "Rare non-HSK10 source rows preserved exactly rather than padded or guessed into HSK10.",
+      "schema": {
+        "fields": [
+          {
+            "name": "reason",
+            "description": "Source anomaly category.",
+            "type": "string"
+          },
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "country_code_raw",
+            "description": "Country code as returned in the source row.",
+            "type": "string"
+          },
+          {
+            "name": "raw_hs_code",
+            "description": "HS code exactly as returned by the source API.",
+            "type": "string"
+          },
+          {
+            "name": "raw_hs_length",
+            "description": "Character length of raw_hs_code.",
+            "type": "integer"
+          },
+          {
+            "name": "name_ko",
+            "description": "Korean item name returned in the source API row, preserved without cosmetic rewriting.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_finished_at",
+            "description": "UTC timestamp of the successful source request used for this row.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "source_weight_warnings.parquet",
+      "description": "Rare source rows with negative reported weight. Values are preserved exactly and are not clamped to zero.",
+      "schema": {
+        "fields": [
+          {
+            "name": "reason",
+            "description": "Source anomaly category.",
+            "type": "string"
+          },
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "country_code_raw",
+            "description": "Country code as returned in the source row.",
+            "type": "string"
+          },
+          {
+            "name": "raw_hs_code",
+            "description": "HS code exactly as returned by the source API.",
+            "type": "string"
+          },
+          {
+            "name": "raw_hs_length",
+            "description": "Character length of raw_hs_code.",
+            "type": "integer"
+          },
+          {
+            "name": "name_ko",
+            "description": "Korean item name returned in the source API row, preserved without cosmetic rewriting.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_finished_at",
+            "description": "UTC timestamp of the successful source request used for this row.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "SOURCES.md",
+      "description": "Official data sources, provenance, and reuse notes."
+    },
+    {
+      "path": "trade_hs10_monthly.parquet",
+      "description": "Canonical monthly trade facts at strict numeric 10-digit Korean HSK grain. This is the source-of-truth analytical fact table.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs10",
+            "description": "Exact numeric 10-digit Korean HSK code returned by the source API.",
+            "type": "string"
+          },
+          {
+            "name": "hs8",
+            "description": "First 8 digits of HSK10; Korean national-detail prefix, not an international HS level.",
+            "type": "string"
+          },
+          {
+            "name": "hs6",
+            "description": "First 6 digits of HSK10; international HS subheading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "hs_revision",
+            "description": "Official annual KCS CLIP edition label (HSK-YYYY) when the annual reference contains the code; otherwise null.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trade_hs2_monthly.parquet",
+      "description": "Monthly international HS2 chapter-level aggregate with residual audit columns.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_trade_balance_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in trade_balance_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_row_count",
+            "description": "Number of HSK10 fact rows plus safely mapped residual source rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "exception_row_count",
+            "description": "Number of non-HSK10 source exception rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "has_residual",
+            "description": "True when at least one non-HSK10 source exception contributes to this aggregate row.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trade_hs4_monthly.parquet",
+      "description": "Monthly international HS4 heading-level aggregate with residual audit columns.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_trade_balance_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in trade_balance_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_row_count",
+            "description": "Number of HSK10 fact rows plus safely mapped residual source rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "exception_row_count",
+            "description": "Number of non-HSK10 source exception rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "has_residual",
+            "description": "True when at least one non-HSK10 source exception contributes to this aggregate row.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trade_hs6_202607_sample.csv",
+      "description": "Convenience CSV containing the complete HS6 table for the latest release month (2026-07) so Kaggle users can preview and start quickly without loading the full history.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs6",
+            "description": "First 6 digits of HSK10; international HS subheading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_trade_balance_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in trade_balance_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_row_count",
+            "description": "Number of HSK10 fact rows plus safely mapped residual source rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "exception_row_count",
+            "description": "Number of non-HSK10 source exception rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "has_residual",
+            "description": "True when at least one non-HSK10 source exception contributes to this aggregate row.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trade_hs6_monthly.parquet",
+      "description": "Recommended general-purpose monthly table at international HS6 level. Safely mappable non-HSK10 residuals are included and explicitly quantified.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs6",
+            "description": "First 6 digits of HSK10; international HS subheading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_trade_balance_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in trade_balance_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_row_count",
+            "description": "Number of HSK10 fact rows plus safely mapped residual source rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "exception_row_count",
+            "description": "Number of non-HSK10 source exception rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "has_residual",
+            "description": "True when at least one non-HSK10 source exception contributes to this aggregate row.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trade_hs8_monthly.parquet",
+      "description": "Monthly HS8-prefix aggregate derived from strict HSK10. Residuals are included only when a source exception has at least 8 valid digits.",
+      "schema": {
+        "fields": [
+          {
+            "name": "month",
+            "description": "Trade month in YYYYMM format.",
+            "type": "string"
+          },
+          {
+            "name": "country_code",
+            "description": "Korea Customs Service partner country/territory code.",
+            "type": "string"
+          },
+          {
+            "name": "hs8",
+            "description": "First 8 digits of HSK10; Korean national-detail prefix, not an international HS level.",
+            "type": "string"
+          },
+          {
+            "name": "hs6",
+            "description": "First 6 digits of HSK10; international HS subheading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs4",
+            "description": "First 4 digits of HSK10; international HS heading level.",
+            "type": "string"
+          },
+          {
+            "name": "hs2",
+            "description": "First 2 digits of HSK10; international HS chapter level.",
+            "type": "string"
+          },
+          {
+            "name": "export_usd",
+            "description": "Export value in USD. Korea Customs publishes exports on an FOB basis.",
+            "type": "integer"
+          },
+          {
+            "name": "export_weight_kg",
+            "description": "Reported export net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "import_usd",
+            "description": "Import value in USD. Korea Customs publishes imports on a CIF/customs-value basis.",
+            "type": "integer"
+          },
+          {
+            "name": "import_weight_kg",
+            "description": "Reported import net weight in kilograms. Rare negative source values are preserved and audited.",
+            "type": "integer"
+          },
+          {
+            "name": "trade_balance_usd",
+            "description": "export_usd minus import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_export_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in export_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_import_weight_kg",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in import_weight_kg.",
+            "type": "integer"
+          },
+          {
+            "name": "residual_trade_balance_usd",
+            "description": "Contribution from safely mappable non-HSK10 source rows included in trade_balance_usd.",
+            "type": "integer"
+          },
+          {
+            "name": "source_row_count",
+            "description": "Number of HSK10 fact rows plus safely mapped residual source rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "exception_row_count",
+            "description": "Number of non-HSK10 source exception rows contributing to this aggregate row.",
+            "type": "integer"
+          },
+          {
+            "name": "has_residual",
+            "description": "True when at least one non-HSK10 source exception contributes to this aggregate row.",
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  "keywords": [
+    "economics",
+    "business",
+    "international relations",
+    "time series analysis",
+    "government",
+    "tabular",
+    "asia"
+  ],
+  "expectedUpdateFrequency": "monthly",
+  "userSpecifiedSources": "Korea Customs Service via the Korea Public Data Portal (data.go.kr) and the official KCS CLIP tariff tables. The official public-data listing states that there is no restriction on the scope of use. See SOURCES.md for provenance, reuse notes, and caveats.",
+  "image": "dataset-cover-image.jpg"
+}

@@ -1,0 +1,311 @@
+{
+  "release_generated_at": "2026-09-08T17:28:06+00:00",
+  "dataset_title": "South Korea Customs Trade 2012-2026 HSK10",
+  "coverage": {
+    "start_month": "201201",
+    "end_month": "202607",
+    "partner_codes": 269,
+    "country_month_assignments": 47075,
+    "source_fact_rows": 22351483,
+    "canonical_hsk10_rows": 22351430,
+    "non_hsk10_source_rows": 53,
+    "negative_weight_warning_rows": 19,
+    "hsk_reference_unknown_fact_rows": 11199,
+    "hsk_reference_unknown_unique_year_codes": 925,
+    "annual_hsk_reference_rows": 178911
+  },
+  "quality": {
+    "release_gate_pass": true,
+    "fatal_sections": [],
+    "warnings": [
+      "source anomaly names without Hangul: 1 (preserved, not rewritten)",
+      "source rows with negative reported weight: 19 (preserved exactly and exposed in the anomaly audit)",
+      "some canonical HSK10 facts are absent from the annual CLIP reference; they remain canonical with null hs_revision and are audited rather than dropped"
+    ],
+    "duplicate_hsk10_keys": 0,
+    "partition_month_mismatches": 0,
+    "source_summary_checked": 3689,
+    "source_summary_matches": 3689,
+    "source_summary_mismatches": 0,
+    "stored_row_reconciliation": {
+      "assigned_fact_rows": 22351483,
+      "canonical_rows": 22351430,
+      "non_hs10_rows": 53,
+      "fatal_anomalies": 0,
+      "reconciles": true
+    }
+  },
+  "derived_levels": [
+    8,
+    6,
+    4,
+    2
+  ],
+  "files": {
+    "trade_hs10_monthly.parquet": {
+      "rows": 22351430,
+      "source_files": 175,
+      "source_bytes": 441335631,
+      "bytes": 417772573,
+      "sha256": "a02de2338aec0e007009f487b3c2d7298d2f24ac7ac89397e628745a78a421bd",
+      "columns": [
+        "month",
+        "country_code",
+        "hs10",
+        "hs8",
+        "hs6",
+        "hs4",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "hs_revision"
+      ]
+    },
+    "trade_hs8_monthly.parquet": {
+      "rows": 20576865,
+      "source_files": 175,
+      "source_bytes": 353521769,
+      "bytes": 353063936,
+      "sha256": "e8cbb9e3d790b2e6796238a4431094ddd6633d52f092ae11c9e21d117b40b7c7",
+      "columns": [
+        "month",
+        "country_code",
+        "hs8",
+        "hs6",
+        "hs4",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "residual_export_usd",
+        "residual_export_weight_kg",
+        "residual_import_usd",
+        "residual_import_weight_kg",
+        "residual_trade_balance_usd",
+        "source_row_count",
+        "exception_row_count",
+        "has_residual"
+      ]
+    },
+    "trade_hs6_monthly.parquet": {
+      "rows": 16059132,
+      "source_files": 175,
+      "source_bytes": 257080829,
+      "bytes": 256630827,
+      "sha256": "5eb36afa8b379712922b3d556618b8607924aa72fb80300b9ff62b86b3ecfd61",
+      "columns": [
+        "month",
+        "country_code",
+        "hs6",
+        "hs4",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "residual_export_usd",
+        "residual_export_weight_kg",
+        "residual_import_usd",
+        "residual_import_weight_kg",
+        "residual_trade_balance_usd",
+        "source_row_count",
+        "exception_row_count",
+        "has_residual"
+      ]
+    },
+    "trade_hs4_monthly.parquet": {
+      "rows": 7234105,
+      "source_files": 175,
+      "source_bytes": 124721647,
+      "bytes": 124283327,
+      "sha256": "32e6d2be1896c35a53f51fa3442428a386cc34cd16dd11d412446612ea3cf6ad",
+      "columns": [
+        "month",
+        "country_code",
+        "hs4",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "residual_export_usd",
+        "residual_export_weight_kg",
+        "residual_import_usd",
+        "residual_import_weight_kg",
+        "residual_trade_balance_usd",
+        "source_row_count",
+        "exception_row_count",
+        "has_residual"
+      ]
+    },
+    "trade_hs2_monthly.parquet": {
+      "rows": 1446045,
+      "source_files": 175,
+      "source_bytes": 29122656,
+      "bytes": 28697114,
+      "sha256": "b4150aa38e265ba3e8ac329b04eb7666ce7fb7954867dae8ada2ffb6d661dfcb",
+      "columns": [
+        "month",
+        "country_code",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "residual_export_usd",
+        "residual_export_weight_kg",
+        "residual_import_usd",
+        "residual_import_weight_kg",
+        "residual_trade_balance_usd",
+        "source_row_count",
+        "exception_row_count",
+        "has_residual"
+      ]
+    },
+    "trade_hs6_202607_sample.csv": {
+      "rows": 102002,
+      "bytes": 7742777,
+      "sha256": "10c4c36aa705118b83bd0c6f584aa07bc7443fa6e1020a643609722df2739e2b",
+      "columns": [
+        "month",
+        "country_code",
+        "hs6",
+        "hs4",
+        "hs2",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "residual_export_usd",
+        "residual_export_weight_kg",
+        "residual_import_usd",
+        "residual_import_weight_kg",
+        "residual_trade_balance_usd",
+        "source_row_count",
+        "exception_row_count",
+        "has_residual"
+      ]
+    },
+    "hsk_code_reference.parquet": {
+      "rows": 178911,
+      "bytes": 758323,
+      "sha256": "bc732ab486a9bd1867aba138978cea2480b2b77d32543b925b5eda27e30876ad",
+      "columns": [
+        "reference_year",
+        "hs_revision",
+        "valid_from",
+        "valid_to",
+        "clip_sct_year",
+        "clip_hstd_year",
+        "hs10",
+        "hs8",
+        "hs6",
+        "hs4",
+        "hs2",
+        "name_ko",
+        "name_en",
+        "source",
+        "source_url"
+      ]
+    },
+    "country_reference.csv": {
+      "rows": 269,
+      "bytes": 17683,
+      "sha256": "ee8665e9dacd3082ddfb4da933d50b9153e2cb07f11b02fccc7b4cd6986e8055",
+      "columns": [
+        "country_code",
+        "country_name_ko",
+        "country_name_en",
+        "un_m49",
+        "iso_alpha3",
+        "un_match_status",
+        "kcs_source_version",
+        "kcs_source_row"
+      ]
+    },
+    "hsk_reference_gaps.csv": {
+      "rows": 925,
+      "bytes": 51025,
+      "sha256": "30f1f6195ccc51452be2f903e1d199dab4088fd783612f72dad1832e1752522a",
+      "columns": [
+        "reference_year",
+        "hs10",
+        "fact_rows",
+        "months",
+        "name_ko_variants"
+      ]
+    },
+    "coverage_report.csv": {
+      "rows": 95,
+      "bytes": 3903,
+      "sha256": "302c05208baeb1dab5e261199fe3b1ef7c2bb5587a191b0c3db509deb00be7a2",
+      "columns": [
+        "section",
+        "metric",
+        "value"
+      ]
+    },
+    "source_code_exceptions.parquet": {
+      "rows": 53,
+      "bytes": 5274,
+      "sha256": "f83a822a9cf17b5f519bf79ff96d4f116695130e4cc692c924a5b3b8553b6b3d",
+      "columns": [
+        "reason",
+        "month",
+        "country_code",
+        "country_code_raw",
+        "raw_hs_code",
+        "raw_hs_length",
+        "name_ko",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "source_finished_at"
+      ]
+    },
+    "source_weight_warnings.parquet": {
+      "rows": 19,
+      "bytes": 5066,
+      "sha256": "d10d65e52d9a3b9cbd1ccf8d192cdb2ca246a3332b492143f91820f9590c8a60",
+      "columns": [
+        "reason",
+        "month",
+        "country_code",
+        "country_code_raw",
+        "raw_hs_code",
+        "raw_hs_length",
+        "name_ko",
+        "export_usd",
+        "export_weight_kg",
+        "import_usd",
+        "import_weight_kg",
+        "trade_balance_usd",
+        "source_finished_at"
+      ]
+    },
+    "DATA_DICTIONARY.md": {
+      "bytes": 4258,
+      "sha256": "7007f00155150c3cfee08bde00a652654d850c95901e67974823628fa374e3af"
+    },
+    "METHODOLOGY.md": {
+      "bytes": 3642,
+      "sha256": "9a84002619cc34533a9778b0cee2e4873e375114d0dd0690944e8c73cd71a072"
+    },
+    "SOURCES.md": {
+      "bytes": 1878,
+      "sha256": "f0d9cac5e1b04bd127f1a999d89fe414756e23466e240ec37cd625398d1b33a7"
+    }
+  },
+  "build_elapsed_seconds": 61.141
+}
